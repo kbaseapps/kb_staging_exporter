@@ -1,0 +1,164 @@
+{
+  "ver" : "",
+  "authors" : ["tgu2"],
+  "contact" : "http://kbase.us/contact-us/",
+  "visible" : true,
+  "categories" : ["active","util"],
+  "widgets": {
+    "input": null,
+    "output" : "no-display"
+  },
+  "parameters" : [
+    {
+      "id" : "input_ref",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "" ],
+      "field_type" : "text",
+      "text_options" : {
+        "valid_ws_types" : ["KBaseFile.SingleEndLibrary", "KBaseFile.PairedEndLibrary",
+                            "KBaseGenomeAnnotations.Assembly",
+                            "KBaseRNASeq.RNASeqAlignment",
+                            "KBaseGenomes.Genome"]
+      }
+    },
+    {
+      "id": "export_alignment_bam",
+      "optional":false,
+      "advanced":true,
+      "allow_multiple":false,
+      "default_values":[1],
+      "field_type" : "checkbox",
+      "checkbox_options":{
+        "checked_value": 1,
+        "unchecked_value": 0
+        }
+    },
+    {
+      "id": "export_alignment_sam",
+      "optional":false,
+      "advanced":true,
+      "allow_multiple":false,
+      "default_values":[0],
+      "field_type" : "checkbox",
+      "checkbox_options":{
+        "checked_value": 1,
+        "unchecked_value": 0
+        }
+    },
+    {
+      "id": "export_genome_genbank",
+      "optional":false,
+      "advanced":true,
+      "allow_multiple":false,
+      "default_values":[1],
+      "field_type" : "checkbox",
+      "checkbox_options":{
+        "checked_value": 1,
+        "unchecked_value": 0
+        }
+    },
+    {
+      "id": "export_genome_gff",
+      "optional":false,
+      "advanced":true,
+      "allow_multiple":false,
+      "default_values":[0],
+      "field_type" : "checkbox",
+      "checkbox_options":{
+        "checked_value": 1,
+        "unchecked_value": 0
+        }
+    },
+    {
+      "id" : "destination_dir",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "workspace_export" ],
+      "field_type" : "text"
+    }
+  ],
+  "parameter-groups": [
+    {
+      "id": "export_alignment",
+      "parameters": [
+        "export_alignment_bam",
+        "export_alignment_sam"
+      ],
+      "optional": true,
+      "allow_multiple": false,
+      "with_border": false,
+      "advanced" : true
+    },
+    {
+      "id": "export_genome",
+      "parameters": [
+        "export_genome_genbank",
+        "export_genome_gff"
+      ],
+      "optional": true,
+      "allow_multiple": false,
+      "with_border": false,
+      "advanced" : true
+    }
+  ],
+  "behavior" : {
+    "service-mapping" : {
+      "url" : "",
+      "name" : "kb_staging_exporter",
+      "method" : "export_to_staging",
+      "input_mapping" : [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "workspace_name"
+        },
+        {
+          "input_parameter" : "input_ref",
+          "target_property" : "input_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter" : "export_alignment",
+          "target_property" : "export_alignment"
+        },
+        {
+          "input_parameter" : "export_genome",
+          "target_property" : "export_genome"
+        },
+        {
+          "input_parameter" : "destination_dir",
+          "target_property" : "destination_dir"
+        },
+        {
+          "constant_value" : 1,
+          "target_property" : "generate_report"
+        }
+      ],
+      "output_mapping" : [
+        {
+          "narrative_system_variable": "workspace",
+          "target_property": "wsName"
+        },
+        {
+            "service_method_output_path": [0, "network_obj_ref"],
+            "target_property": "network_obj_ref"
+        },
+        {
+            "service_method_output_path": [0, "report_name"],
+            "target_property": "report_name"
+        },
+        {
+            "service_method_output_path": [0, "report_ref"],
+            "target_property": "report_ref"
+        },
+        {
+            "constant_value": "16",
+            "target_property": "report_window_line_height"
+        }
+      ]
+    }
+  },
+  "job_id_output_field": "docker"
+}
