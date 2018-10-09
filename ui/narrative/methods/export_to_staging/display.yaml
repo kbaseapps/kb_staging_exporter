@@ -1,0 +1,81 @@
+name     : Export to Staging Area
+subtitle : Export file(s) associated with an object to Staging Area
+tooltip  : Export file(s) associated with an object to Staging Area
+
+icon: data-yellow.png
+
+screenshots :
+    []
+
+suggestions :
+    apps:
+        related :
+            []
+        next :
+            []
+    methods:
+        related :
+            []
+        next :
+            []
+
+parameters :
+    input_ref :
+        ui-name: |
+            Input Object
+        short-hint : |
+            Input orkspace object reference
+        long-hint  : |
+            Input orkspace object reference
+
+    export_alignment_bam:
+        ui-name: |
+            BAM
+        short-hint : |
+            Export Alignment as BAM file
+        long-hint  : |
+            Export Alignment as BAM file
+
+    export_alignment_sam:
+        ui-name: |
+            SAM
+        short-hint : |
+            Export Alignment as SAM file
+        long-hint  : |
+            Export Alignment as SAM file
+
+    export_genome_genbank:
+        ui-name: |
+            GENBANK
+        short-hint : |
+            Export Genome as GENBANK file
+        long-hint  : |
+            Export Genome as GENBANK file
+
+    export_genome_gff:
+        ui-name: |
+            GFF
+        short-hint : |
+            Export Genome as GFF
+        long-hint  : |
+            Export Genome as GFF
+
+    destination_dir:
+        ui-name: |
+            Destination Directory
+        short-hint : |
+            Destination directory file(s) is saving to
+        long-hint  : |
+            Destination directory file(s) is saving to
+
+
+parameter-groups :
+    export_alignment :
+        ui-name : Export Alignment
+        short-hint : Export Alignment workspace object
+    export_genome :
+        ui-name : Export Genome
+        short-hint : Export Genome workspace object
+
+description : |
+    <p> Export file(s) associated with an object to Staging Area </p>
