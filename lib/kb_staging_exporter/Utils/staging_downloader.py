@@ -218,6 +218,9 @@ class staging_downloader:
         for file in files:
             shutil.copy2(os.path.join(result_dir, file), staging_dir)
 
+        if not (set(os.listdir(staging_dir)) >= set(files)):
+            raise ValueError('Unexpected error occurred during copying files')
+
         returnVal = dict()
         returnVal['result_dir'] = result_dir
 
