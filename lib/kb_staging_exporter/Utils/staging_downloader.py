@@ -19,7 +19,8 @@ def log(message, prefix_newline=False):
 class staging_downloader:
 
     # staging file prefix
-    STAGING_FILE_PREFIX = '/data/bulk/'
+    # STAGING_FILE_PREFIX = '/data/bulk/'
+    STAGING_FILE_PREFIX = '/staging/'
 
     def _mkdir_p(self, path):
         """
