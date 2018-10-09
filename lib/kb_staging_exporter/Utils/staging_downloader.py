@@ -9,6 +9,7 @@ from KBaseReport.KBaseReportClient import KBaseReport
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
+from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 
 
 def log(message, prefix_newline=False):
@@ -117,6 +118,55 @@ class staging_downloader:
 
         return result_dir
 
+    def _download_alignment(self, alignment_ref, alignment_name, export_alignment):
+        """
+        downloand Alignment as BAM or SAM
+        """
+        log('start downloading Alignment file')
+
+        if not export_alignment:
+            log('start downloading BAM as default')
+            export_alignment = {'export_alignment_bam': 1}
+
+        # create the output directory and move the file there
+        result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        self._mkdir_p(result_dir)
+
+        if export_alignment.get('export_alignment_bam'):
+            download_params = {'source_ref': alignment_ref}
+            download_ret = self.rau.download_alignment(download_params)
+
+            destination_dir = download_ret.get('destination_dir')
+
+            file_names = os.listdir(destination_dir)
+            for filename in file_names:
+                new_file_name = alignment_name + '_' + alignment_ref.replace('/', '_') + \
+                                '.' + filename.split('.', 1)[1]
+                os.rename(os.path.join(destination_dir, filename),
+                          os.path.join(destination_dir, new_file_name))
+
+                shutil.copy2(os.path.join(destination_dir, new_file_name), result_dir)
+
+        if export_alignment.get('export_alignment_sam'):
+            download_params = {'source_ref': alignment_ref,
+                               'downloadSAM': True}
+            download_ret = self.rau.download_alignment(download_params)
+
+            destination_dir = download_ret.get('destination_dir')
+
+            file_names = os.listdir(destination_dir)
+            for filename in file_names:
+                new_file_name = alignment_name + '_' + alignment_ref.replace('/', '_') + \
+                                '.' + filename.split('.', 1)[1]
+                os.rename(os.path.join(destination_dir, filename),
+                          os.path.join(destination_dir, new_file_name))
+
+                shutil.copy2(os.path.join(destination_dir, new_file_name), result_dir)
+
+        log('downloaded files:\n' + str(os.listdir(result_dir)))
+
+        return result_dir
+
     def _download_genome(self, genome_ref, genome_name, export_genome):
         """
         download Genome as GENBANK or GFF
@@ -174,6 +224,7 @@ class staging_downloader:
         self.ru = ReadsUtils(self.callback_url)
         self.au = AssemblyUtil(self.callback_url)
         self.gfu = GenomeFileUtil(self.callback_url)
+        self.rau = ReadsAlignmentUtils(self.callback_url)
 
     def export_to_staging(self, ctx, params):
         """
@@ -206,7 +257,7 @@ class staging_downloader:
         elif obj_type in ['KBaseGenomeAnnotations.Assembly']:
             result_dir = self._download_assembly(input_ref, obj_name)
         elif obj_type in ['KBaseRNASeq.RNASeqAlignment']:
-            pass
+            result_dir = self._download_alignment(input_ref, obj_name, params.get('export_alignment'))
         elif obj_type in ['KBaseGenomes.Genome']:
             result_dir = self._download_genome(input_ref, obj_name, params.get('export_genome'))
         else:

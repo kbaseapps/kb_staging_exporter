@@ -25,6 +25,7 @@ from kb_staging_exporter.Utils.staging_downloader import staging_downloader
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
+from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 
 
 class kb_staging_exporterTest(unittest.TestCase):
@@ -32,6 +33,7 @@ class kb_staging_exporterTest(unittest.TestCase):
     READS_FASTQ_MD5 = '68442259e29e856f766bbe38fedd9b30'
     ASSEMLBY_FASTA_MD5 = 'a5cecffc35ef1cf86c6f7a6e1f72066e'
     GENOME_GENBANK_MD5 = '5d6150673c2b0445bf7912ff79ef82c7'
+    ALIGNMENT_BAM_MD5 = '96c59589b0ed7338ff27de1881cf40b3'
 
     @classmethod
     def setUpClass(cls):
@@ -66,6 +68,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         cls.ru = ReadsUtils(cls.callback_url)
         cls.au = AssemblyUtil(cls.callback_url)
         cls.gfu = GenomeFileUtil(cls.callback_url)
+        cls.rau = ReadsAlignmentUtils(cls.callback_url)
 
     @classmethod
     def tearDownClass(cls):
@@ -158,6 +161,31 @@ class kb_staging_exporterTest(unittest.TestCase):
         self.__class__.test_Assembly = test_Assembly
         print('Loaded Assembly: ' + test_Assembly)
         return test_Assembly
+
+    def loadAlignment(self):
+        if hasattr(self.__class__, 'test_Alignment'):
+            return self.__class__.test_Alignment
+
+        test_Reads = self.loadReads()
+        test_Genome = self.loadGenome()
+
+        alignment_file_name = 'accepted_hits.bam'
+        alignment_file_path = os.path.join(self.scratch, alignment_file_name)
+        shutil.copy(os.path.join('data', alignment_file_name), alignment_file_path)
+
+        alignment_object_name_1 = 'test_Alignment_1'
+        destination_ref = self.getWsName() + '/' + alignment_object_name_1
+        test_Alignment = self.rau.upload_alignment({'file_path': alignment_file_path,
+                                                    'destination_ref': destination_ref,
+                                                    'read_library_ref': test_Reads,
+                                                    'condition': 'test_condition_1',
+                                                    'library_type': 'single_end',
+                                                    'assembly_or_genome_ref': test_Genome
+                                                    })['obj_ref']
+
+        self.__class__.test_Alignment = test_Alignment
+        print('Loaded Alignment: ' + test_Alignment)
+        return test_Alignment
 
     def start_test(self):
         testname = inspect.stack()[1][3]
@@ -289,3 +317,55 @@ class kb_staging_exporterTest(unittest.TestCase):
         self.assertTrue(set(staging_files) >= set(genome_files))
 
         self.assertEqual(len(genome_files), 2)
+
+    @patch.object(staging_downloader, "STAGING_FILE_PREFIX", new='/kb/module/work/tmp/')
+    def test_export_to_staging_alignment_ok(self):
+        self.start_test()
+
+        test_Alignment = self.loadAlignment()
+        destination_dir = 'test_staging_export'
+        params = {'input_ref': test_Alignment,
+                  'workspace_name': self.getWsName(),
+                  'destination_dir': destination_dir,
+                  'generate_report': True}
+
+        ret = self.getImpl().export_to_staging(self.ctx, params)[0]
+
+        alignment_files = os.listdir(ret['result_dir'])
+
+        staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
+                                                self.ctx['user_id'],
+                                                destination_dir))
+        print('staging files:\n' + '\n'.join(staging_files))
+        self.assertTrue(set(staging_files) >= set(alignment_files))
+
+        self.assertEqual(len(alignment_files), 1)
+        bam_file_name = alignment_files[0]
+        self.assertTrue(bam_file_name.startswith('test_Alignment'))
+        self.assertEqual(self.md5(os.path.join(ret['result_dir'], bam_file_name)),
+                         self.ALIGNMENT_BAM_MD5)
+
+    @patch.object(staging_downloader, "STAGING_FILE_PREFIX", new='/kb/module/work/tmp/')
+    def test_export_to_staging_alignment_sam_ok(self):
+        self.start_test()
+
+        test_Alignment = self.loadAlignment()
+        destination_dir = 'test_staging_export'
+        params = {'input_ref': test_Alignment,
+                  'workspace_name': self.getWsName(),
+                  'destination_dir': destination_dir,
+                  'generate_report': True,
+                  'export_alignment': {'export_alignment_bam': 1,
+                                       'export_alignment_sam': 1}}
+
+        ret = self.getImpl().export_to_staging(self.ctx, params)[0]
+
+        alignment_files = os.listdir(ret['result_dir'])
+
+        staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
+                                                self.ctx['user_id'],
+                                                destination_dir))
+        print('staging files:\n' + '\n'.join(staging_files))
+        self.assertTrue(set(staging_files) >= set(alignment_files))
+
+        self.assertEqual(len(alignment_files), 2)
