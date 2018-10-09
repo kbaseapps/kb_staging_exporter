@@ -15,6 +15,10 @@
   "type" : "sdk",
   "version_tag" : "release"
 }, {
+  "module_name" : "ReadsAlignmentUtils",
+  "type" : "sdk",
+  "version_tag" : "release"
+}, {
   "module_name" : "ReadsUtils",
   "type" : "sdk",
   "version_tag" : "release"

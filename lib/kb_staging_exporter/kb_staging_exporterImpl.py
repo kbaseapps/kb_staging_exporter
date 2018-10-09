@@ -23,7 +23,7 @@ class kb_staging_exporter:
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "git@github.com:Tianhao-Gu/kb_staging_exporter.git"
-    GIT_COMMIT_HASH = "d46ff277ce3bf8a500c6518d1cff6e741e9fc367"
+    GIT_COMMIT_HASH = "1a90d88cf88a076b8005c10dfea35432c77bf506"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
