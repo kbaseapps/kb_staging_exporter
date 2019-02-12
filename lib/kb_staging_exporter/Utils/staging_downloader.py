@@ -20,7 +20,8 @@ def log(message, prefix_newline=False):
 class staging_downloader:
 
     # staging file prefix
-    STAGING_FILE_PREFIX = '/data/bulk/'
+    STAGING_GLOBAL_FILE_PREFIX = '/data/bulk/'
+    STAGING_USER_FILE_PREFIX = '/staging/'
 
     def _mkdir_p(self, path):
         """
@@ -35,6 +36,20 @@ class staging_downloader:
                 pass
             else:
                 raise
+
+    def _get_staging_file_prefix(self, token_user):
+        """
+        _get_staging_file_prefix: return staging area file path prefix
+
+        directory pattern:
+            perfered to return user specific path: /staging/
+            if this path is not visible to user, use global bulk path: /data/bulk/user_name/
+        """
+
+        if os.path.exists(self.STAGING_USER_FILE_PREFIX):
+            return self.STAGING_USER_FILE_PREFIX
+        else:
+            return os.path.join(self.STAGING_GLOBAL_FILE_PREFIX, token_user)
 
     def _validate_export_params(self, params):
         """
@@ -263,7 +278,8 @@ class staging_downloader:
         else:
             raise ValueError('Unexpected data type')
 
-        staging_dir = os.path.join(self.STAGING_FILE_PREFIX, ctx['user_id'], destination_dir)
+        staging_dir_prefix = self._get_staging_file_prefix(ctx['user_id'])
+        staging_dir = os.path.join(staging_dir_prefix, destination_dir)
         self._mkdir_p(staging_dir)
         files = os.listdir(result_dir)
         for file in files:
