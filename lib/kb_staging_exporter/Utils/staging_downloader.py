@@ -148,7 +148,8 @@ class staging_downloader:
         self._mkdir_p(result_dir)
 
         if export_alignment.get('export_alignment_bam'):
-            download_params = {'source_ref': alignment_ref}
+            download_params = {'source_ref': alignment_ref,
+                               'downloadBAI': True}
             download_ret = self.rau.download_alignment(download_params)
 
             destination_dir = download_ret.get('destination_dir')
@@ -164,6 +165,7 @@ class staging_downloader:
 
         if export_alignment.get('export_alignment_sam'):
             download_params = {'source_ref': alignment_ref,
+                               'downloadBAI': True,
                                'downloadSAM': True}
             download_ret = self.rau.download_alignment(download_params)
 
