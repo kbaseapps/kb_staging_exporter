@@ -336,7 +336,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
-        self.assertEqual(len(alignment_files), 1)
+        self.assertEqual(len(alignment_files), 2)
         bam_file_name = alignment_files[0]
         self.assertTrue(bam_file_name.startswith('test_Alignment'))
         self.assertEqual(self.md5(os.path.join(ret['result_dir'], bam_file_name)),
@@ -365,4 +365,4 @@ class kb_staging_exporterTest(unittest.TestCase):
         print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
-        self.assertEqual(len(alignment_files), 2)
+        self.assertEqual(len(alignment_files), 3)
