@@ -336,11 +336,13 @@ class kb_staging_exporterTest(unittest.TestCase):
         print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
-        self.assertEqual(len(alignment_files), 1)
-        bam_file_name = alignment_files[0]
-        self.assertTrue(bam_file_name.startswith('test_Alignment'))
-        self.assertEqual(self.md5(os.path.join(ret['result_dir'], bam_file_name)),
-                         self.ALIGNMENT_BAM_MD5)
+        self.assertEqual(len(alignment_files), 2)
+
+        for alignment_file in alignment_files:
+            self.assertTrue(alignment_file.startswith('test_Alignment'))
+            if alignment_file.endswith('.bam'):
+                self.assertEqual(self.md5(os.path.join(ret['result_dir'], alignment_file)),
+                                 self.ALIGNMENT_BAM_MD5)
 
     @patch.object(staging_downloader, "STAGING_GLOBAL_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_alignment_sam_ok(self):
@@ -365,4 +367,4 @@ class kb_staging_exporterTest(unittest.TestCase):
         print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
-        self.assertEqual(len(alignment_files), 2)
+        self.assertEqual(len(alignment_files), 3)
