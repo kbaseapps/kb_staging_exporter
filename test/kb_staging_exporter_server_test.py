@@ -120,6 +120,29 @@ class kb_staging_exporterTest(unittest.TestCase):
         print('Loaded Genome: ' + test_Genome)
         return test_Genome
 
+    def loadMetagenome(self):
+        if hasattr(self.__class__, 'test_Metagenome'):
+            return self.__class__.test_Metagenome
+        gff_file_name = 'metagenome.gff'
+        gff_file_path = os.path.join(self.scratch, gff_file_name)
+        fasta_file_name = 'metagenome.fa'
+        fasta_file_path = os.path.join(self.scratch, fasta_file_name)
+
+        shutil.copy(os.path.join('data', gff_file_name), gff_file_path)
+        shutil.copy(os.path.join('data', fasta_file_name), fasta_file_path)
+
+        metagenome_object_name = 'test_Metagenome'
+        test_Metagenome = self.gfu.fasta_gff_to_metagenome({'gff_file': {'path': gff_file_path},
+                                                        'fasta_file': {'path': fasta_file_path},
+                                                        'workspace_name': self.getWsName(),
+                                                        'genome_name': metagenome_object_name,
+                                                        'generate_missing_genes': 1
+                                                       })['metagenome_ref']
+
+        self.__class__.test_Metagenome = test_Metagenome
+        print('Loaded Metagenome: ' + test_Metagenome)
+        return test_Metagenome
+
     def loadReads(self):
         if hasattr(self.__class__, 'test_Reads'):
             return self.__class__.test_Reads
@@ -289,6 +312,26 @@ class kb_staging_exporterTest(unittest.TestCase):
         self.assertTrue(genome_file_name.startswith('test_Genome'))
         # self.assertEqual(self.md5(os.path.join(ret['result_dir'], genome_file_name)),
         #                  self.GENOME_GENBANK_MD5)
+
+    def test_export_to_staging_metagenome_ok(self):
+        """"""
+        self.start_test()
+        test_Metagenome = self.loadMetagenome()
+        destination_dir = "test_staging_export"
+        params = {
+            "input_ref": test_Metagenome,
+            "workspace_name": self.getWsName(),
+            "destination_dir": destination_dir,
+            "generate_report": True
+        }
+        ret = self.getImpl().export_to_staging(self.ctx, params)[0]
+        metagenome_files = os.listdir(ret['result_dir'])
+        staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
+                                                self.ctx['user_id'],
+                                                destination_dir))
+        self.assertTrue(set(staging_files) >= set(metagenome_files))
+
+        self.assertEqual(len(metagenome_files), 2)
 
     @patch.object(staging_downloader, "STAGING_GLOBAL_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_genome_gff_ok(self):
