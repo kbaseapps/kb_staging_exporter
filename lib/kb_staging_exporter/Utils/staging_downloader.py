@@ -296,7 +296,7 @@ class staging_downloader:
             result_dir = self._download_alignment(input_ref, obj_name, params.get('export_alignment'))
         elif obj_type in ['KBaseGenomes.Genome']:
             result_dir = self._download_genome(input_ref, obj_name, params.get('export_genome'))
-        elif obj_type in ['KBaseMetagenome.AnnotatedMetagenomeAssembly']:
+        elif obj_type in ['KBaseMetagenomes.AnnotatedMetagenomeAssembly']:
             result_dir = self._download_metagenome(input_ref, obj_name)
         else:
             raise ValueError('Unexpected data type')
