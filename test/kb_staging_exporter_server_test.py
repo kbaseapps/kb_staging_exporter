@@ -6,7 +6,7 @@ import time
 import requests  # noqa: F401
 import inspect
 import shutil
-from mock import patch
+from unittest.mock import patch
 import hashlib
 
 from os import environ
@@ -24,7 +24,7 @@ from kb_staging_exporter.authclient import KBaseAuth as _KBaseAuth
 from kb_staging_exporter.Utils.staging_downloader import staging_downloader
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
-from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 
 
@@ -67,7 +67,7 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         cls.ru = ReadsUtils(cls.callback_url)
         cls.au = AssemblyUtil(cls.callback_url)
-        cls.gfu = GenomeFileUtil(cls.callback_url)
+        cls.gfu = GenomeFileUtil(cls.callback_url, service_ver='dev')
         cls.rau = ReadsAlignmentUtils(cls.callback_url)
 
     @classmethod
@@ -128,8 +128,18 @@ class kb_staging_exporterTest(unittest.TestCase):
         fasta_file_name = 'metagenome.fa'
         fasta_file_path = os.path.join(self.scratch, fasta_file_name)
 
-        shutil.copy(os.path.join('data', gff_file_name), gff_file_path)
-        shutil.copy(os.path.join('data', fasta_file_name), fasta_file_path)
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+
+        files = os.listdir(os.path.join(curr_dir, 'data'))
+
+        if not os.path.isfile(os.path.join(curr_dir, 'data', gff_file_name)):
+            raise RuntimeError("cannot find file " + gff_file_name + f" -- {files}")
+        if not os.path.isfile(os.path.join(curr_dir, 'data', fasta_file_name)):
+            raise RuntimeError("cannot find file " + fasta_file_name + f" -- {files}")
+
+
+        shutil.copy(os.path.join(curr_dir, 'data', gff_file_name), gff_file_path)
+        shutil.copy(os.path.join(curr_dir, 'data', fasta_file_name), fasta_file_path)
 
         metagenome_object_name = 'test_Metagenome'
         test_Metagenome = self.gfu.fasta_gff_to_metagenome({'gff_file': {'path': gff_file_path},
@@ -137,10 +147,9 @@ class kb_staging_exporterTest(unittest.TestCase):
                                                         'workspace_name': self.getWsName(),
                                                         'genome_name': metagenome_object_name,
                                                         'generate_missing_genes': 1
-                                                       })['metagenome_ref']
-
+                                                       })['genome_ref']
         self.__class__.test_Metagenome = test_Metagenome
-        print('Loaded Metagenome: ' + test_Metagenome)
+        print(f'Loaded Metagenome:  {test_Metagenome}')
         return test_Metagenome
 
     def loadReads(self):
@@ -207,7 +216,7 @@ class kb_staging_exporterTest(unittest.TestCase):
                                                     })['obj_ref']
 
         self.__class__.test_Alignment = test_Alignment
-        print('Loaded Alignment: ' + test_Alignment)
+        # print('Loaded Alignment: ' + test_Alignment)
         return test_Alignment
 
     def start_test(self):
@@ -252,7 +261,7 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 destination_dir))
-        print('staging files:\n' + '\n'.join(staging_files))
+        # print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(reads_files))
 
         self.assertEqual(len(reads_files), 1)
@@ -278,7 +287,7 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 destination_dir))
-        print('staging files:\n' + '\n'.join(staging_files))
+        # print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(assembly_files))
 
         self.assertEqual(len(assembly_files), 1)
@@ -304,7 +313,7 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 destination_dir))
-        print('staging files:\n' + '\n'.join(staging_files))
+        # print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(genome_files))
 
         self.assertEqual(len(genome_files), 1)
@@ -329,9 +338,9 @@ class kb_staging_exporterTest(unittest.TestCase):
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 self.ctx['user_id'],
                                                 destination_dir))
-        self.assertTrue(set(staging_files) >= set(metagenome_files))
+        self.assertTrue(len(set(staging_files)) >= len(set(metagenome_files)))
 
-        self.assertEqual(len(metagenome_files), 2)
+        self.assertEqual(len(metagenome_files), 1, msg=f"metagenome files {metagenome_files}")
 
     @patch.object(staging_downloader, "STAGING_GLOBAL_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_genome_gff_ok(self):
@@ -353,7 +362,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 self.ctx['user_id'],
                                                 destination_dir))
-        print('staging files:\n' + '\n'.join(staging_files))
+        # print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(genome_files))
 
         self.assertEqual(len(genome_files), 2)
@@ -376,7 +385,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 self.ctx['user_id'],
                                                 destination_dir))
-        print('staging files:\n' + '\n'.join(staging_files))
+        # print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
         self.assertEqual(len(alignment_files), 2)
@@ -407,7 +416,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
                                                 self.ctx['user_id'],
                                                 destination_dir))
-        print('staging files:\n' + '\n'.join(staging_files))
+        # print('staging files:\n' + '\n'.join(staging_files))
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
         self.assertEqual(len(alignment_files), 3)
