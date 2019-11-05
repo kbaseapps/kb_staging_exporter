@@ -8,7 +8,7 @@ from DataFileUtil.DataFileUtilClient import DataFileUtil
 from KBaseReport.KBaseReportClient import KBaseReport
 from ReadsUtils.ReadsUtilsClient import ReadsUtils
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
-from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 
 
@@ -184,6 +184,25 @@ class staging_downloader:
 
         return result_dir
 
+    def _download_metagenome(self, metagenome_ref, metagenome_name):
+        """
+        """
+        log("start downloading Annotated Metagenome Assembly files")
+        result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        self._mkdir_p(result_dir)
+        download_ret = self.gfu.metagenome_to_gff({'genome_ref': metagenome_ref})
+        gff_file = download_ret.get('file_path')
+        gff_file_name = os.path.basename(gff_file)
+        shutil.move(gff_file, result_dir)
+
+        new_file_name = metagenome_name + '_' + metagenome_ref.replace('/', '_') + \
+            '.' + gff_file_name.split('.', 1)[1]
+
+        os.rename(os.path.join(result_dir, gff_file_name),
+                  os.path.join(result_dir, new_file_name))
+
+        return result_dir
+
     def _download_genome(self, genome_ref, genome_name, export_genome):
         """
         download Genome as GENBANK or GFF
@@ -277,6 +296,8 @@ class staging_downloader:
             result_dir = self._download_alignment(input_ref, obj_name, params.get('export_alignment'))
         elif obj_type in ['KBaseGenomes.Genome']:
             result_dir = self._download_genome(input_ref, obj_name, params.get('export_genome'))
+        elif obj_type in ['KBaseMetagenomes.AnnotatedMetagenomeAssembly']:
+            result_dir = self._download_metagenome(input_ref, obj_name)
         else:
             raise ValueError('Unexpected data type')
 
