@@ -1,6 +1,6 @@
 name     : Export Data Object To Staging Area
 subtitle :
-tooltip  : Export files associated with a Reads, Genome, Assembly, or Alignment object to the Staging Area.
+tooltip  : Export files associated with a Reads, Genome, Assembly, Annotated Metagenome Assembly or Alignment object to the Staging Area.
 
 icon: data-yellow.png
 
@@ -66,7 +66,7 @@ parameter-groups :
         short-hint : Export the Genome workspace object.
 
 description : |
-    <p>This App is designed to export file(s) associated with a KBase certain data objects to the Staging Area. Please note that it currently only supports Reads Libraries (SingleEnd and PairedEnd libraries), RNASeqAlignment, Assembly and Genome objects. Advanced parameters are available for data objects where multiples files formats are supported for download. As an example, Genome objects can be downloaded in GenBank and GFF format.</p>
+    <p>This App is designed to export file(s) associated with a KBase certain data objects to the Staging Area. Please note that it currently only supports Reads Libraries (SingleEnd and PairedEnd libraries), RNASeqAlignment, Assembly, Annotated-Metagenome-Assembly and Genome objects. Advanced parameters are available for data objects where multiples files formats are supported for download. As an example, Genome objects can be downloaded in GenBank and GFF format.</p>
 
     <p>The App allows the user to select a folder in the Staging Area where the files will be located. This can be done by setting the folder name in the parameter “Destination Directory”. If the folder named imputed in “Destination Directory” does not exist, a new folder will be created. For convenience, the “workspace_export” folder name is filled in by default as a place to manage files for download. The Staging Area can be accessed via the Data Panel by clicking the “+” icon, this action will slide out the data panel. The “Destination Directory” can be found in the “Import” tab. Once the selected directory is accessed, files can be downloaded by clicking the downwards arrow.</p>
 
