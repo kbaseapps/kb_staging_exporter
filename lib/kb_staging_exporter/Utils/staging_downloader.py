@@ -189,7 +189,7 @@ class staging_downloader:
         log("start downloading Annotated Metagenome Assembly files")
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         self._mkdir_p(result_dir)
-        download_ret = self.gfu.metagenome_to_gff({'genome_ref': metagenome_ref})
+        download_ret = self.gfu.metagenome_to_gff({'metagenome_ref': metagenome_ref})
         gff_file = download_ret.get('file_path')
         gff_file_name = os.path.basename(gff_file)
         shutil.move(gff_file, result_dir)
