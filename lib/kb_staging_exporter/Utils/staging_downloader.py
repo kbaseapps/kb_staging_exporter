@@ -3,7 +3,7 @@ import os
 import errno
 import uuid
 import shutil
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from DataFileUtil.DataFileUtilClient import DataFileUtil
 from KBaseReport.KBaseReportClient import KBaseReport
@@ -97,25 +97,15 @@ class staging_downloader:
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         self._mkdir_p(result_dir)
         fwd = files['fwd']
-        # shutil.move(fwd, os.path.join(result_dir, os.path.basename(fwd)))
         rev = files.get('rev')
-        # if rev:
-        #     shutil.move(rev, os.path.join(result_dir, os.path.basename(rev)))
 
         result_zip_name = reads_name + '_' + reads_ref.replace('/', '_') + '.FASTQ.zip'
         result_zip = os.path.join(result_dir, result_zip_name)
 
-        with ZipFile(result_zip, 'w') as zipObj2:
-            zipObj2.write(fwd)
+        with ZipFile(result_zip, 'w', ZIP_DEFLATED) as zipObj2:
+            zipObj2.write(fwd, os.path.basename(fwd))
             if rev:
-                zipObj2.write(rev)
-
-        # file_names = os.listdir(result_dir)
-        # for filename in file_names:
-        #     new_file_name = reads_name + '_' + reads_ref.replace('/', '_') + \
-        #                     '.' + filename.split('.', 1)[1]
-        #     os.rename(os.path.join(result_dir, filename),
-        #               os.path.join(result_dir, new_file_name))
+                zipObj2.write(rev, os.path.basename(rev))
 
         log('downloaded files:\n' + str(os.listdir(result_dir)))
 
@@ -199,7 +189,7 @@ class staging_downloader:
         log("start downloading Annotated Metagenome Assembly files")
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         self._mkdir_p(result_dir)
-        download_ret = self.gfu.metagenome_to_gff({'genome_ref': metagenome_ref})
+        download_ret = self.gfu.metagenome_to_gff({'metagenome_ref': metagenome_ref})
         gff_file = download_ret.get('file_path')
         gff_file_name = os.path.basename(gff_file)
         shutil.move(gff_file, result_dir)
