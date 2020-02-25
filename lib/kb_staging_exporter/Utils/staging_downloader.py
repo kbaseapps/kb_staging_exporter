@@ -3,6 +3,7 @@ import os
 import errno
 import uuid
 import shutil
+from zipfile import ZipFile
 
 from DataFileUtil.DataFileUtilClient import DataFileUtil
 from KBaseReport.KBaseReportClient import KBaseReport
@@ -96,17 +97,25 @@ class staging_downloader:
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         self._mkdir_p(result_dir)
         fwd = files['fwd']
-        shutil.move(fwd, os.path.join(result_dir, os.path.basename(fwd)))
+        # shutil.move(fwd, os.path.join(result_dir, os.path.basename(fwd)))
         rev = files.get('rev')
-        if rev:
-            shutil.move(rev, os.path.join(result_dir, os.path.basename(rev)))
+        # if rev:
+        #     shutil.move(rev, os.path.join(result_dir, os.path.basename(rev)))
 
-        file_names = os.listdir(result_dir)
-        for filename in file_names:
-            new_file_name = reads_name + '_' + reads_ref.replace('/', '_') + \
-                            '.' + filename.split('.', 1)[1]
-            os.rename(os.path.join(result_dir, filename),
-                      os.path.join(result_dir, new_file_name))
+        result_zip_name = reads_name + '_' + reads_ref.replace('/', '_') + '.FASTQ.zip'
+        result_zip = os.path.join(result_dir, result_zip_name)
+
+        with ZipFile(result_zip, 'w') as zipObj2:
+            zipObj2.write(fwd)
+            if rev:
+                zipObj2.write(rev)
+
+        # file_names = os.listdir(result_dir)
+        # for filename in file_names:
+        #     new_file_name = reads_name + '_' + reads_ref.replace('/', '_') + \
+        #                     '.' + filename.split('.', 1)[1]
+        #     os.rename(os.path.join(result_dir, filename),
+        #               os.path.join(result_dir, new_file_name))
 
         log('downloaded files:\n' + str(os.listdir(result_dir)))
 
