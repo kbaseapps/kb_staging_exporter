@@ -11,6 +11,7 @@ from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.ReadsUtilsClient import ReadsUtils
 from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 from installed_clients.KBaseReportClient import KBaseReport
+from installed_clients.sample_uploaderClient import sample_uploader
 
 
 def log(message, prefix_newline=False):
@@ -202,6 +203,28 @@ class staging_downloader:
 
         return result_dir
 
+    def _download_sampleset(self, sample_set_ref, sample_set_name):
+        """
+        downloand SampleSet in SESAR format
+        """
+        log('start downloading SampleSet in SESAR format')
+
+        # create the output directory and move the file there
+        result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        self._mkdir_p(result_dir)
+
+        params = {
+            "input_ref": sample_set_ref,
+            "file_format": "SESAR"
+        }
+        download_ret = self.sp_uploader.export_samples(params)
+
+        shutil.move(download_ret.get('result_dir'), result_dir)
+
+        log('downloaded files:\n' + str(os.listdir(result_dir)))
+
+        return result_dir
+
     def _download_genome(self, genome_ref, genome_name, export_genome):
         """
         download Genome as GENBANK or GFF
@@ -260,6 +283,7 @@ class staging_downloader:
         self.au = AssemblyUtil(self.callback_url)
         self.gfu = GenomeFileUtil(self.callback_url)
         self.rau = ReadsAlignmentUtils(self.callback_url)
+        self.sp_uploader = sample_uploader(self.callback_url)
 
     def export_to_staging(self, ctx, params):
         """
@@ -297,6 +321,8 @@ class staging_downloader:
             result_dir = self._download_genome(input_ref, obj_name, params.get('export_genome'))
         elif obj_type in ['KBaseMetagenomes.AnnotatedMetagenomeAssembly']:
             result_dir = self._download_metagenome(input_ref, obj_name)
+        elif obj_type in ['KBaseSets.SampleSet']:
+            result_dir = self._download_sampleset(input_ref, obj_name)
         else:
             raise ValueError('Unexpected data type')
 
