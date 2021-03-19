@@ -20,7 +20,9 @@
         "valid_ws_types" : ["KBaseFile.SingleEndLibrary", "KBaseFile.PairedEndLibrary",
                             "KBaseGenomeAnnotations.Assembly",
                             "KBaseRNASeq.RNASeqAlignment",
-                            "KBaseGenomes.Genome", "KBaseMetagenomes.AnnotatedMetagenomeAssembly"]
+                            "KBaseGenomes.Genome",
+                            "KBaseMetagenomes.AnnotatedMetagenomeAssembly",
+                            "KBaseSets.SampleSet"]
       }
     },
     {
