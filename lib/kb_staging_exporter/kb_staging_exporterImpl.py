@@ -22,8 +22,8 @@ class kb_staging_exporter:
     # the latter method is running.
     ######################################### noqa
     VERSION = "1.0.4"
-    GIT_URL = "https://github.com/Tianhao-Gu/kb_staging_exporter.git"
-    GIT_COMMIT_HASH = "0c99bcad448817fa9b29b998cf8c099686be675d"
+    GIT_URL = "git@github.com:Tianhao-Gu/kb_staging_exporter.git"
+    GIT_COMMIT_HASH = "22060e7c8f3dde6c791ecec611388adc44a6cef6"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER

@@ -12,10 +12,9 @@ from __future__ import print_function
 try:
     # baseclient and this client are in a package
     from .baseclient import BaseClient as _BaseClient  # @UnusedImport
-except:
+except ImportError:
     # no they aren't
     from baseclient import BaseClient as _BaseClient  # @Reimport
-import time
 
 
 class ReadsAlignmentUtils(object):
@@ -24,7 +23,7 @@ class ReadsAlignmentUtils(object):
             self, url=None, timeout=30 * 60, user_id=None,
             password=None, token=None, ignore_authrc=False,
             trust_all_ssl_certificates=False,
-            auth_svc='https://kbase.us/services/authorization/Sessions/Login',
+            auth_svc='https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login',
             service_ver='release',
             async_job_check_time_ms=100, async_job_check_time_scale_percent=150, 
             async_job_check_max_time_ms=300000):
@@ -40,14 +39,6 @@ class ReadsAlignmentUtils(object):
             async_job_check_time_scale_percent=async_job_check_time_scale_percent,
             async_job_check_max_time_ms=async_job_check_max_time_ms)
 
-    def _check_job(self, job_id):
-        return self._client._check_job('ReadsAlignmentUtils', job_id)
-
-    def _validate_alignment_submit(self, params, context=None):
-        return self._client._submit_job(
-             'ReadsAlignmentUtils.validate_alignment', [params],
-             self._service_ver, context)
-
     def validate_alignment(self, params, context=None):
         """
         :param params: instance of type "ValidateAlignmentParams" (* Input
@@ -60,22 +51,8 @@ class ReadsAlignmentUtils(object):
            validate alignment *) -> structure: parameter "validated" of type
            "boolean" (A boolean - 0 for false, 1 for true. @range (0, 1))
         """
-        job_id = self._validate_alignment_submit(params, context)
-        async_job_check_time = self._client.async_job_check_time
-        while True:
-            time.sleep(async_job_check_time)
-            async_job_check_time = (async_job_check_time *
-                self._client.async_job_check_time_scale_percent / 100.0)
-            if async_job_check_time > self._client.async_job_check_max_time:
-                async_job_check_time = self._client.async_job_check_max_time
-            job_state = self._check_job(job_id)
-            if job_state['finished']:
-                return job_state['result'][0]
-
-    def _upload_alignment_submit(self, params, context=None):
-        return self._client._submit_job(
-             'ReadsAlignmentUtils.upload_alignment', [params],
-             self._service_ver, context)
+        return self._client.run_job('ReadsAlignmentUtils.validate_alignment',
+                                    [params], self._service_ver, context)
 
     def upload_alignment(self, params, context=None):
         """
@@ -145,22 +122,8 @@ class ReadsAlignmentUtils(object):
            uploading a reads alignment  *) -> structure: parameter "obj_ref"
            of String
         """
-        job_id = self._upload_alignment_submit(params, context)
-        async_job_check_time = self._client.async_job_check_time
-        while True:
-            time.sleep(async_job_check_time)
-            async_job_check_time = (async_job_check_time *
-                self._client.async_job_check_time_scale_percent / 100.0)
-            if async_job_check_time > self._client.async_job_check_max_time:
-                async_job_check_time = self._client.async_job_check_max_time
-            job_state = self._check_job(job_id)
-            if job_state['finished']:
-                return job_state['result'][0]
-
-    def _download_alignment_submit(self, params, context=None):
-        return self._client._submit_job(
-             'ReadsAlignmentUtils.download_alignment', [params],
-             self._service_ver, context)
+        return self._client.run_job('ReadsAlignmentUtils.upload_alignment',
+                                    [params], self._service_ver, context)
 
     def download_alignment(self, params, context=None):
         """
@@ -185,22 +148,8 @@ class ReadsAlignmentUtils(object):
            parameter "unmapped_reads" of Long, parameter "mapped_reads" of
            Long, parameter "total_reads" of Long
         """
-        job_id = self._download_alignment_submit(params, context)
-        async_job_check_time = self._client.async_job_check_time
-        while True:
-            time.sleep(async_job_check_time)
-            async_job_check_time = (async_job_check_time *
-                self._client.async_job_check_time_scale_percent / 100.0)
-            if async_job_check_time > self._client.async_job_check_max_time:
-                async_job_check_time = self._client.async_job_check_max_time
-            job_state = self._check_job(job_id)
-            if job_state['finished']:
-                return job_state['result'][0]
-
-    def _export_alignment_submit(self, params, context=None):
-        return self._client._submit_job(
-             'ReadsAlignmentUtils.export_alignment', [params],
-             self._service_ver, context)
+        return self._client.run_job('ReadsAlignmentUtils.download_alignment',
+                                    [params], self._service_ver, context)
 
     def export_alignment(self, params, context=None):
         """
@@ -219,28 +168,9 @@ class ReadsAlignmentUtils(object):
         :returns: instance of type "ExportOutput" -> structure: parameter
            "shock_id" of String
         """
-        job_id = self._export_alignment_submit(params, context)
-        async_job_check_time = self._client.async_job_check_time
-        while True:
-            time.sleep(async_job_check_time)
-            async_job_check_time = (async_job_check_time *
-                self._client.async_job_check_time_scale_percent / 100.0)
-            if async_job_check_time > self._client.async_job_check_max_time:
-                async_job_check_time = self._client.async_job_check_max_time
-            job_state = self._check_job(job_id)
-            if job_state['finished']:
-                return job_state['result'][0]
+        return self._client.run_job('ReadsAlignmentUtils.export_alignment',
+                                    [params], self._service_ver, context)
 
     def status(self, context=None):
-        job_id = self._client._submit_job('ReadsAlignmentUtils.status', 
-            [], self._service_ver, context)
-        async_job_check_time = self._client.async_job_check_time
-        while True:
-            time.sleep(async_job_check_time)
-            async_job_check_time = (async_job_check_time *
-                self._client.async_job_check_time_scale_percent / 100.0)
-            if async_job_check_time > self._client.async_job_check_max_time:
-                async_job_check_time = self._client.async_job_check_max_time
-            job_state = self._check_job(job_id)
-            if job_state['finished']:
-                return job_state['result'][0]
+        return self._client.run_job('ReadsAlignmentUtils.status',
+                                    [], self._service_ver, context)
