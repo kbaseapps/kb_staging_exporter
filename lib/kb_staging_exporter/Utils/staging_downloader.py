@@ -211,7 +211,6 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
 
         params = {
             "input_ref": sample_set_ref,
