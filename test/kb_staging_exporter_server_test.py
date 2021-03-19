@@ -17,15 +17,15 @@ except:
 
 from pprint import pprint  # noqa: F401
 
-from biokbase.workspace.client import Workspace as workspaceService
+from installed_clients.WorkspaceClient import Workspace as workspaceService
 from kb_staging_exporter.kb_staging_exporterImpl import kb_staging_exporter
 from kb_staging_exporter.kb_staging_exporterServer import MethodContext
 from kb_staging_exporter.authclient import KBaseAuth as _KBaseAuth
 from kb_staging_exporter.Utils.staging_downloader import staging_downloader
-from ReadsUtils.ReadsUtilsClient import ReadsUtils
-from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
+from installed_clients.ReadsUtilsClient import ReadsUtils
+from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
-from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
+from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 
 
 class kb_staging_exporterTest(unittest.TestCase):
