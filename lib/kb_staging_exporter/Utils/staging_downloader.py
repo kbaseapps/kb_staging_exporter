@@ -287,7 +287,7 @@ class staging_downloader:
         self.au = AssemblyUtil(self.callback_url)
         self.gfu = GenomeFileUtil(self.callback_url)
         self.rau = ReadsAlignmentUtils(self.callback_url)
-        self.sp_uploader = sample_uploader(self.callback_url)
+        self.sp_uploader = sample_uploader(self.callback_url, service_ver='beta')
 
     def export_to_staging(self, ctx, params):
         """
