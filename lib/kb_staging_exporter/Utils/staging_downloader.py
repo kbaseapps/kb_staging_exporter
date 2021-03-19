@@ -211,6 +211,7 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
+        self._mkdir_p(result_dir)
 
         params = {
             "input_ref": sample_set_ref,
@@ -218,7 +219,11 @@ class staging_downloader:
         }
         download_ret = self.sp_uploader.export_samples(params)
 
-        shutil.copytree(download_ret.get('result_dir'), result_dir)
+        files = os.listdir(download_ret.get('result_dir'))
+        for file in files:
+            if file.endswith('.csv'):
+                shutil.copy2(os.path.join(download_ret.get('result_dir'), file),
+                             result_dir)
 
         log('downloaded files:\n' + str(os.listdir(result_dir)))
 
