@@ -219,7 +219,7 @@ class staging_downloader:
         }
         download_ret = self.sp_uploader.export_samples(params)
 
-        shutil.move(download_ret.get('result_dir'), result_dir)
+        shutil.copy2(download_ret.get('result_dir'), result_dir)
 
         log('downloaded files:\n' + str(os.listdir(result_dir)))
 
