@@ -190,16 +190,38 @@ class staging_downloader:
         log("start downloading Annotated Metagenome Assembly files")
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
         self._mkdir_p(result_dir)
+        # download gff file
         download_ret = self.gfu.metagenome_to_gff({'metagenome_ref': metagenome_ref})
         gff_file = download_ret.get('file_path')
         gff_file_name = os.path.basename(gff_file)
         shutil.move(gff_file, result_dir)
 
         new_file_name = metagenome_name + '_' + metagenome_ref.replace('/', '_') + \
-            '.' + gff_file_name.split('.', 1)[1]
+            os.path.splitext(gff_file_name)[1]
 
         os.rename(os.path.join(result_dir, gff_file_name),
                   os.path.join(result_dir, new_file_name))
+
+        # download data object
+        ret_data = self.dfu.get_objects({
+            "object_refs": [metagenome_ref]
+        })['data'][0]['data']
+        # get the protein fasta
+        prot_handle_ref = ret_data['protein_handle_ref']
+        prot_file = self.dfu.shock_to_file({
+            'handle_id': prot_handle_ref,
+            'file_path': result_dir
+        })['file_path']
+        # get the fasta from the assembly
+        assembly_ref = ret_data['assembly_ref']
+        assemb_ret = self.dfu.get_objects(
+            {'object_refs': [assembly_ref]}
+        )['data'][0]['data']
+        fasta_handle_ref = assemb_ret['fasta_handle_ref']
+        fasta_file = self.dfu.shock_to_file({
+            'handle_id': fasta_handle_ref,
+            'file_path': result_dir
+        })['file_path']
 
         return result_dir
 
