@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import unittest
 import os  # noqa: F401
 import json  # noqa: F401
