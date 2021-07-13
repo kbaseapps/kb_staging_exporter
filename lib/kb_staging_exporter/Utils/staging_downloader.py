@@ -353,7 +353,8 @@ class staging_downloader:
         # so if we add write privs to the root group that solves the issue.
         # Longer term this app should not run as root and should chown ownership to the staging
         # service when it has a static user name vs. a number that might change.
-        self._recursive_chmod(staging_dir, stat.S_IWGRP)
+        basemode = os.stat(staging_dir).st_mode
+        self._recursive_chmod(staging_dir, basemode | stat.S_IWGRP)
         
         if not (set(os.listdir(staging_dir)) >= set(files)):
             raise ValueError('Unexpected error occurred during copying files')

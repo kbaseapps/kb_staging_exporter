@@ -272,9 +272,10 @@ class kb_staging_exporterTest(unittest.TestCase):
         #                  self.READS_FASTQ_MD5)
 
         # test that the group write permission is correctly added to the new files
-        assert bool(os.stat(staging_dir).st_mode & stat.S_IWGRP), staging_dir
+        # and the old permissions are otherwise retained
+        self.assertEqual(os.stat(staging_dir).st_mode, 0o040775, staging_dir)
         for f in staging_files:
-            assert bool(os.stat(os.path.join(staging_dir, f)).st_mode & stat.S_IWGRP), f
+            self.assertEqual(os.stat(os.path.join(staging_dir, f)).st_mode, 0o100775, f)
 
     @patch.object(staging_downloader, "STAGING_USER_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_assembly_ok(self):
