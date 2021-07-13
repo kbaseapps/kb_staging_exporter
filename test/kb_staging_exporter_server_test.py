@@ -2,6 +2,7 @@
 import unittest
 import os  # noqa: F401
 import json  # noqa: F401
+import stat
 import time
 import requests  # noqa: F401
 import inspect
@@ -244,6 +245,9 @@ class kb_staging_exporterTest(unittest.TestCase):
 
     @patch.object(staging_downloader, "STAGING_USER_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_reads_ok(self):
+        """
+        Also tests that the downloaded files have the correct group write permission.
+        """
         self.start_test()
 
         test_Reads = self.loadReads()
@@ -257,8 +261,8 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         reads_files = os.listdir(ret['result_dir'])
 
-        staging_files = os.listdir(os.path.join('/kb/module/work/tmp/',
-                                                destination_dir))
+        staging_dir = os.path.join('/kb/module/work/tmp/', destination_dir)
+        staging_files = os.listdir(staging_dir)
         self.assertTrue(set(staging_files) >= set(reads_files))
 
         self.assertEqual(len(reads_files), 1)
@@ -266,6 +270,11 @@ class kb_staging_exporterTest(unittest.TestCase):
         self.assertTrue(reads_file_name.startswith('test_Reads'))
         # self.assertEqual(self.md5(os.path.join(ret['result_dir'], reads_file_name)),
         #                  self.READS_FASTQ_MD5)
+
+        # test that the group write permission is correctly added to the new files
+        assert bool(os.stat(staging_dir).st_mode & stat.S_IWGRP), staging_dir
+        for f in staging_files:
+            assert bool(os.stat(os.path.join(staging_dir, f)).st_mode & stat.S_IWGRP), f
 
     @patch.object(staging_downloader, "STAGING_USER_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_assembly_ok(self):

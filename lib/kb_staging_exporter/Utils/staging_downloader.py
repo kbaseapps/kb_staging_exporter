@@ -3,6 +3,7 @@ import os
 import errno
 import uuid
 import shutil
+import stat
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -276,6 +277,12 @@ class staging_downloader:
 
         return result_dir
 
+    def _recursive_chmod(self, path, bitmask):
+        for dirpath, _, filenames in os.walk(path):
+            os.chmod(dirpath, bitmask)
+            for filename in filenames:
+                os.chmod(os.path.join(dirpath, filename), bitmask)
+
     def __init__(self, config):
         self.ws_url = config["workspace-url"]
         self.callback_url = config['SDK_CALLBACK_URL']
@@ -335,8 +342,19 @@ class staging_downloader:
         self._mkdir_p(staging_dir)
         files = os.listdir(result_dir)
         for file in files:
+            # Doesn't use move to keep result dir around for other apps that might not
+            # have access to the staging ara
             shutil.copy2(os.path.join(result_dir, file), staging_dir)
 
+        # This is a KBase specific hack to allow the staging service to delete the files and
+        # folders written by this module. Currently the staging service runs as user 800 and
+        # this module runs as root (bleah) so the staging service throws an error if the user
+        # tries to delete the folder. The staging service belongs to the root group, however,
+        # so if we add write privs to the root group that solves the issue.
+        # Longer term this app should not run as root and should chown ownership to the staging
+        # service when it has a static user name vs. a number that might change.
+        self._recursive_chmod(staging_dir, stat.S_IWGRP)
+        
         if not (set(os.listdir(staging_dir)) >= set(files)):
             raise ValueError('Unexpected error occurred during copying files')
 
