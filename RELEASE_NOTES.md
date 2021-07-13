@@ -12,3 +12,7 @@ Adding KbaseMetagenomes.AnnotatedMetagenomeAssembly exporter with staging.
 1.0.5
 -----
 Adding KBaseSets.SampleSet exporter with staging.
+
+1.0.6
+-----
+Add group write permissions to staging area files so the staging service can delete them.
