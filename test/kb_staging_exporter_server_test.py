@@ -2,7 +2,6 @@
 import unittest
 import os  # noqa: F401
 import json  # noqa: F401
-import stat
 import time
 import requests  # noqa: F401
 import inspect
