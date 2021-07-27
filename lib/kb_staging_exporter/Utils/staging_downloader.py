@@ -209,7 +209,7 @@ class staging_downloader:
         })['data'][0]['data']
         # get the protein fasta
         prot_handle_ref = ret_data['protein_handle_ref']
-        prot_file = self.dfu.shock_to_file({
+        _ = self.dfu.shock_to_file({
             'handle_id': prot_handle_ref,
             'file_path': result_dir
         })['file_path']
@@ -219,7 +219,7 @@ class staging_downloader:
             {'object_refs': [assembly_ref]}
         )['data'][0]['data']
         fasta_handle_ref = assemb_ret['fasta_handle_ref']
-        fasta_file = self.dfu.shock_to_file({
+        _ = self.dfu.shock_to_file({
             'handle_id': fasta_handle_ref,
             'file_path': result_dir
         })['file_path']
