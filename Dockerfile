@@ -16,6 +16,10 @@ RUN chmod -R a+rw /kb/module
 
 WORKDIR /kb/module
 
+RUN pip install --upgrade pip && \
+	pip install pyyaml && \
+	pip install requests
+
 RUN make all
 
 ENTRYPOINT [ "./scripts/entrypoint.sh" ]
