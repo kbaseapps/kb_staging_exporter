@@ -13,7 +13,7 @@ from installed_clients.ReadsUtilsClient import ReadsUtils
 from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.sample_uploaderClient import sample_uploader
-
+from installed_clients.KBaseDataObjectToFileUtilsClient import KBaseDataObjectToFileUtils
 
 def log(message, prefix_newline=False):
     time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
@@ -197,32 +197,42 @@ class staging_downloader:
         gff_file_name = os.path.basename(gff_file)
         shutil.move(gff_file, result_dir)
 
-        new_file_name = metagenome_name + '_' + metagenome_ref.replace('/', '_') + \
-            os.path.splitext(gff_file_name)[1]
+        file_name_prefix = str(metagenome_name).replace(' ', '_') + '_' + metagenome_ref.replace('/', '_')
+        new_gff_file_name = file_name_prefix + os.path.splitext(gff_file_name)[1]
 
         os.rename(os.path.join(result_dir, gff_file_name),
-                  os.path.join(result_dir, new_file_name))
+                  os.path.join(result_dir, new_gff_file_name))
 
-        # download data object
-        ret_data = self.dfu.get_objects({
-            "object_refs": [metagenome_ref]
-        })['data'][0]['data']
-        # get the protein fasta
-        prot_handle_ref = ret_data['protein_handle_ref']
-        _ = self.dfu.shock_to_file({
-            'handle_id': prot_handle_ref,
-            'file_path': result_dir
-        })['file_path']
-        # get the fasta from the assembly
-        assembly_ref = ret_data['assembly_ref']
-        assemb_ret = self.dfu.get_objects(
-            {'object_refs': [assembly_ref]}
-        )['data'][0]['data']
-        fasta_handle_ref = assemb_ret['fasta_handle_ref']
-        _ = self.dfu.shock_to_file({
-            'handle_id': fasta_handle_ref,
-            'file_path': result_dir
-        })['file_path']
+        prot_params = {
+            'ama_ref': metagenome_ref,
+            'file': file_name_prefix +'_prot.fasta',
+            'dir': result_dir,
+            'console': [],
+            'invalid_msgs': [],
+            'residue_type': "prot",
+            'feature_type': "ALL",
+            'record_id_pattern': '%%feature_id%%',
+            'record_desc_pattern': '[%%genome_id%%]',
+            'case': 'upper',
+            'linewrap': 50
+        }
+        _ = self.dotfu.AnnotatedMetagenomeAssemblyToFASTA(prot_params)
+        nucl_params = {
+            'ama_ref': metagenome_ref,
+            'file': file_name_prefix +'.fasta',
+            'dir': result_dir,
+            'console': [],
+            'invalid_msgs': [],
+            'residue_type': "nucl",
+            'feature_type': "ALL",
+            'record_id_pattern': '%%feature_id%%',
+            'record_desc_pattern': '[%%genome_id%%]',
+            'case': 'upper',
+            'linewrap': 50
+        }
+        _ = self.dotfu.AnnotatedMetagenomeAssemblyToFASTA(nucl_params)
+
+        log('downloaded files:\n' + str(os.listdir(result_dir)))
 
         return result_dir
 
@@ -317,6 +327,7 @@ class staging_downloader:
         self.gfu = GenomeFileUtil(self.callback_url)
         self.rau = ReadsAlignmentUtils(self.callback_url)
         self.sp_uploader = sample_uploader(self.callback_url, service_ver='beta')
+        self.dotfu = KBaseDataObjectToFileUtils(self.callback_url, token=self.token, service_ver='beta')
 
     def export_to_staging(self, ctx, params):
         """
