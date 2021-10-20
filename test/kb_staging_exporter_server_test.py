@@ -344,7 +344,7 @@ class kb_staging_exporterTest(unittest.TestCase):
                                                 destination_dir))
         self.assertTrue(len(set(staging_files)) >= len(set(metagenome_files)))
 
-        self.assertEqual(len(metagenome_files), 3, msg=f"metagenome files {metagenome_files}")
+        self.assertEqual(len(metagenome_files), 4, msg=f"metagenome files {metagenome_files}")
 
     @patch.object(staging_downloader, "STAGING_GLOBAL_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_genome_gff_ok(self):

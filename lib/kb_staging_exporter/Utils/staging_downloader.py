@@ -4,6 +4,7 @@ import errno
 import uuid
 import shutil
 import stat
+import gzip
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -216,10 +217,10 @@ class staging_downloader:
             'case': 'upper',
             'linewrap': 50
         }
-        _ = self.dotfu.AnnotatedMetagenomeAssemblyToFASTA(prot_params)
+        prot_fp = self.dotfu.AnnotatedMetagenomeAssemblyToFASTA(prot_params)['fasta_file_path']
         nucl_params = {
             'ama_ref': metagenome_ref,
-            'file': file_name_prefix +'.fasta',
+            'file': file_name_prefix +'_gene_nuc.fna',
             'dir': result_dir,
             'console': [],
             'invalid_msgs': [],
@@ -230,7 +231,24 @@ class staging_downloader:
             'case': 'upper',
             'linewrap': 50
         }
-        _ = self.dotfu.AnnotatedMetagenomeAssemblyToFASTA(nucl_params)
+        nucl_fp = self.dotfu.AnnotatedMetagenomeAssemblyToFASTA(nucl_params)['fasta_file_path']
+        # gzip files here.
+        ret = self.au.get_fastas({'ref_lst': [metagenome_ref]})
+        fasta_fp = ret[metagenome_ref]['paths'][0]
+        shutil.move(fasta_fp, result_dir)
+
+        fasta_file_name = os.path.basename(fasta_fp)
+        new_fasta_file_name = file_name_prefix + os.path.splitext(fasta_file_name)[1]
+        new_fasta_file_path = os.path.join(result_dir, new_fasta_file_name)
+        os.rename(os.path.join(result_dir, fasta_file_name),
+                  new_fasta_file_path)
+
+        for fp in [prot_fp, nucl_fp, new_fasta_file_path]:
+            with open(fp, 'rb') as f_in:
+                with gzip.open(fp + '.gz', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            # remove non-gzipped versions
+            os.remove(fp)
 
         log('downloaded files:\n' + str(os.listdir(result_dir)))
 
