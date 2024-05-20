@@ -1,3 +1,8 @@
 test_local
 sdk.cfg
 lib/kb_staging_exporter/kb_staging_exporterImpl.py.bak*
+/bin/
+/.settings/
+/.classpath
+/.project
+/.pydevproject
