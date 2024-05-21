@@ -1,6 +1,10 @@
 # kb_staging_exporter release notes
 =========================================
 
+1.0.8
+-----
+* Added the export_json_to_staging function
+
 1.0.7
 -----
 * updating metagenome staging exporter.

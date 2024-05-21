@@ -6,8 +6,11 @@ import time
 import requests  # noqa: F401
 import inspect
 import shutil
+import uuid
+from pathlib import Path
 from unittest.mock import patch
 import hashlib
+import zipfile
 
 from os import environ
 try:
@@ -69,6 +72,10 @@ class kb_staging_exporterTest(unittest.TestCase):
         cls.au = AssemblyUtil(cls.callback_url)
         cls.gfu = GenomeFileUtil(cls.callback_url, service_ver='dev')
         cls.rau = ReadsAlignmentUtils(cls.callback_url)
+        
+        cls.wsName = "test_kb_staging_exporter_" + str(uuid.uuid4())
+        ret = cls.wsClient.create_workspace({'workspace': cls.wsName})
+        cls.wsid = ret[0]
 
     @classmethod
     def tearDownClass(cls):
@@ -78,15 +85,6 @@ class kb_staging_exporterTest(unittest.TestCase):
 
     def getWsClient(self):
         return self.__class__.wsClient
-
-    def getWsName(self):
-        if hasattr(self.__class__, 'wsName'):
-            return self.__class__.wsName
-        suffix = int(time.time() * 1000)
-        wsName = "test_kb_staging_exporter_" + str(suffix)
-        ret = self.getWsClient().create_workspace({'workspace': wsName})  # noqa
-        self.__class__.wsName = wsName
-        return wsName
 
     def getImpl(self):
         return self.__class__.serviceImpl
@@ -111,7 +109,7 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         genome_object_name = 'test_Genome'
         test_Genome = self.gfu.genbank_to_genome({'file': {'path': genbank_file_path},
-                                                  'workspace_name': self.getWsName(),
+                                                  'workspace_name': self.wsName,
                                                   'genome_name': genome_object_name,
                                                   'generate_ids_if_needed': 1
                                                   })['genome_ref']
@@ -143,7 +141,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         metagenome_object_name = 'test_Metagenome'
         test_Metagenome = self.gfu.fasta_gff_to_metagenome({'gff_file': {'path': gff_file_path},
                                                             'fasta_file': {'path': fasta_file_path},
-                                                            'workspace_name': self.getWsName(),
+                                                            'workspace_name': self.wsName,
                                                             'genome_name': metagenome_object_name,
                                                             'generate_missing_genes': 1
                                                             })['metagenome_ref']
@@ -166,7 +164,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         reads_object_name = 'test_Reads'
         test_Reads = self.ru.upload_reads({'fwd_file': fwd_reads_file_path,
                                            'rev_file': rev_reads_file_path,
-                                           'wsname': self.getWsName(),
+                                           'wsname': self.wsName,
                                            'sequencing_tech': 'Unknown',
                                            'name': reads_object_name
                                            })['obj_ref']
@@ -185,7 +183,7 @@ class kb_staging_exporterTest(unittest.TestCase):
 
         assemlby_name = 'test_Assembly'
         test_Assembly = self.au.save_assembly_from_fasta({'file': {'path': fasta_file_path},
-                                                          'workspace_name': self.getWsName(),
+                                                          'workspace_name': self.wsName,
                                                           'assembly_name': assemlby_name
                                                           })
 
@@ -205,7 +203,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         shutil.copy(os.path.join('data', alignment_file_name), alignment_file_path)
 
         alignment_object_name_1 = 'test_Alignment_1'
-        destination_ref = self.getWsName() + '/' + alignment_object_name_1
+        destination_ref = self.wsName + '/' + alignment_object_name_1
         test_Alignment = self.rau.upload_alignment({'file_path': alignment_file_path,
                                                     'destination_ref': destination_ref,
                                                     'read_library_ref': test_Reads,
@@ -241,6 +239,20 @@ class kb_staging_exporterTest(unittest.TestCase):
                              'missing_workspace_name': 'workspace_name'}
         error_msg = '"workspace_name" parameter is required, but missing'
         self.fail_export_to_staging(invalidate_params, error_msg)
+        
+        invalidate_params = {'input_ref': 'input_ref',
+                             'workspace_name': 'workspace_name',
+                             'missing_destination_dir': 'dd'
+        }
+        error_msg = '"destination_dir" parameter is required, but missing'
+        self.fail_export_to_staging(invalidate_params, error_msg)
+        
+        invalidate_params = {'input_ref': 'input_ref',
+                             'workspace_name': 'workspace_name',
+                             'destination_dir': 'safe_dir/../../kbase_secrets_dir'
+        }
+        error_msg = "destination_dir may not point to an area outside of the user's staging area"
+        self.fail_export_to_staging(invalidate_params, error_msg)
 
     @patch.object(staging_downloader, "STAGING_USER_FILE_PREFIX", new='/kb/module/work/tmp/')
     def test_export_to_staging_reads_ok(self):
@@ -252,7 +264,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         test_Reads = self.loadReads()
         destination_dir = 'test_staging_export'
         params = {'input_ref': test_Reads,
-                  'workspace_name': self.getWsName(),
+                  'workspace_name': self.wsName,
                   'destination_dir': destination_dir,
                   'generate_report': True}
 
@@ -283,7 +295,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         test_Assembly = self.loadAssembly()
         destination_dir = 'test_staging_export'
         params = {'input_ref': test_Assembly,
-                  'workspace_name': self.getWsName(),
+                  'workspace_name': self.wsName,
                   'destination_dir': destination_dir,
                   'generate_report': True}
 
@@ -308,7 +320,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         test_Genome = self.loadGenome()
         destination_dir = 'test_staging_export'
         params = {'input_ref': test_Genome,
-                  'workspace_name': self.getWsName(),
+                  'workspace_name': self.wsName,
                   'destination_dir': destination_dir,
                   'generate_report': True}
 
@@ -333,7 +345,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         destination_dir = "test_staging_export"
         params = {
             "input_ref": test_Metagenome,
-            "workspace_name": self.getWsName(),
+            "workspace_name": self.wsName,
             "destination_dir": destination_dir,
             "generate_report": True
         }
@@ -353,8 +365,8 @@ class kb_staging_exporterTest(unittest.TestCase):
         test_Genome = self.loadGenome()
         destination_dir = 'test_staging_export'
         params = {'input_ref': test_Genome,
-                  'workspace_name': self.getWsName(),
-                  'destination_dir': destination_dir,
+                  'workspace_name': self.wsName,
+                  'destination_dir': destination_dir + '/../test_staging_export',
                   'generate_report': True,
                   'export_genome': {'export_genome_genbank': 1,
                                     'export_genome_gff': 1}}
@@ -377,8 +389,8 @@ class kb_staging_exporterTest(unittest.TestCase):
         test_Alignment = self.loadAlignment()
         destination_dir = 'test_staging_export'
         params = {'input_ref': test_Alignment,
-                  'workspace_name': self.getWsName(),
-                  'destination_dir': destination_dir,
+                  'workspace_name': self.wsName,
+                  'destination_dir': destination_dir + "/foo/..",
                   'generate_report': True}
 
         ret = self.getImpl().export_to_staging(self.ctx, params)[0]
@@ -405,7 +417,7 @@ class kb_staging_exporterTest(unittest.TestCase):
         test_Alignment = self.loadAlignment()
         destination_dir = 'test_staging_export'
         params = {'input_ref': test_Alignment,
-                  'workspace_name': self.getWsName(),
+                  'workspace_name': self.wsName,
                   'destination_dir': destination_dir,
                   'generate_report': True,
                   'export_alignment': {'export_alignment_bam': 1,
@@ -421,3 +433,112 @@ class kb_staging_exporterTest(unittest.TestCase):
         self.assertTrue(set(staging_files) >= set(alignment_files))
 
         self.assertEqual(len(alignment_files), 3)
+
+    def fail_export_json_to_staging(self, params, error, exception=ValueError):
+        # TODO TEST update to pytest
+        with self.assertRaisesRegex(exception, error):
+            self.serviceImpl.export_json_to_staging(self.ctx, params)
+
+    def test_export_json_to_staging_fail_bad_params(self):
+        self.start_test()
+
+        invalidate_params = {'missing_input_ref': 'input_ref',
+                             'destination_dir': 'dd'}
+        error_msg = '"input_ref" parameter is required, but missing'
+        self.fail_export_json_to_staging(invalidate_params, error_msg)
+
+        invalidate_params = {'input_ref': 'input_ref',
+                             'missing_destination_dir': 'dd'}
+        error_msg = '"destination_dir" parameter is required, but missing'
+        self.fail_export_json_to_staging(invalidate_params, error_msg)
+        
+        invalidate_params = {'input_ref': 'input_ref',
+                             'destination_dir': '../sekrits'}
+        error_msg = "destination_dir may not point to an area outside of the user's staging area"
+        self.fail_export_json_to_staging(invalidate_params, error_msg)
+
+        invalidate_params = {'input_ref': 'input_ref',
+                             'destination_dir': 'ok',
+                             'format': "\tfake\t",
+        }
+        error_msg = 'Unknown format: fake'
+        self.fail_export_json_to_staging(invalidate_params, error_msg)
+
+    @patch.object(staging_downloader, "STAGING_USER_FILE_PREFIX", new='/kb/module/work/tmp/')
+    def test_export_json_to_staging_standard_format(self):
+        self.start_test()
+        
+        oinfo = self.wsClient.save_objects({"id": self.wsid, "objects": [{
+            "name": "json|test",
+            "type": "Empty.AType",
+            "data": {"sup": "dawg"},
+            "meta": {"meta": "data"},
+            "provenance": [{"service": "yes, immediately"}],
+        }]})[0]
+        upa = f"{oinfo[6]}/{oinfo[0]}/{oinfo[4]}"
+        filename = "json_test.json"
+        
+        for format, ddir in [
+                (None, "jsonone"),
+                ("   \t  ", "jsontwo"),
+                ("  standard   ", "jsonthree")
+            ]:
+            params = {"input_ref": upa, "destination_dir": ddir, "format": format}
+            resdir = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]["result_dir"]
+            staging_dir = Path("/kb/module/work/tmp/") / ddir
+            staging_file = staging_dir / (filename + ".zip")
+            rmd5 = self.md5(Path(resdir) / (filename + ".zip"))
+            dmd5 = self.md5(staging_file)
+            assert rmd5 == dmd5
+            with zipfile.ZipFile(staging_file) as z:
+                assert z.namelist() == [filename]
+                with z.open(filename) as f:
+                    js = json.loads(f.read())
+                    assert js["info"][2].split("-")[0] == "Empty.AType"
+                    js["info"][2] = None
+                    js["info"][3] = None  # drop time
+                    js["created"] = None
+                    js["epoch"] = None
+                    expected = {
+                        "data": {"sup": "dawg"},
+                        "info": [
+                            1,
+                            "json|test",
+                            None,
+                            None,
+                            1,
+                            self.ctx["user_id"],
+                            self.wsid,
+                            self.wsName,
+                            "8e041a86b7267bc9e0fc624786b5bc49",
+                            14,
+                            {"meta": "data"},
+                        ],
+                        "path": [str(self.wsid) + "/1/1"],
+                        "provenance": [
+                            {
+                                "service": "yes, immediately",
+                                "method_params": [],
+                                "input_ws_objects": [],
+                                "resolved_ws_objects": [],
+                                "intermediate_incoming": [],
+                                "intermediate_outgoing": [],
+                                "external_data": [],
+                                "subactions": [],
+                                "custom": {}
+                            }
+                        ],
+                        "creator": self.ctx["user_id"],
+                        "orig_wsid": self.wsid,
+                        "created": None,
+                        "epoch": None,
+                        "refs": [],
+                        "copy_source_inaccessible": 0,
+                        "extracted_ids": {}
+                    }
+                    # TODO this would be a whole lot easier to debug with pytest
+                    assert js == expected
+            # test that the group write permission is correctly added to the new files
+            # and the old permissions are otherwise retained
+            assert os.stat(staging_dir).st_mode == 0o040775
+            assert os.stat(staging_file).st_mode == 0o100775

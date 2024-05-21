@@ -1,10 +1,12 @@
 import time
 import os
+import json
 import errno
 import uuid
 import shutil
 import stat
 import gzip
+from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from installed_clients.GenomeFileUtilClient import GenomeFileUtil
@@ -15,6 +17,7 @@ from installed_clients.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.sample_uploaderClient import sample_uploader
 from installed_clients.KBaseDataObjectToFileUtilsClient import KBaseDataObjectToFileUtils
+from installed_clients.WorkspaceClient import Workspace
 
 def log(message, prefix_newline=False):
     time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
@@ -27,26 +30,12 @@ class staging_downloader:
     STAGING_GLOBAL_FILE_PREFIX = '/data/bulk/'
     STAGING_USER_FILE_PREFIX = '/staging/'
 
-    def _mkdir_p(self, path):
-        """
-        _mkdir_p: make directory for given path
-        """
-        if not path:
-            return
-        try:
-            os.makedirs(path)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST and os.path.isdir(path):
-                pass
-            else:
-                raise
-
     def _get_staging_file_prefix(self, token_user):
         """
         _get_staging_file_prefix: return staging area file path prefix
 
         directory pattern:
-            perfered to return user specific path: /staging/
+            preferred to return user specific path: /staging/
             if this path is not visible to user, use global bulk path: /data/bulk/user_name/
         """
 
@@ -98,7 +87,7 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
+        os.makedirs(result_dir, exist_ok=True)
         fwd = files['fwd']
         rev = files.get('rev')
 
@@ -128,7 +117,7 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
+        os.makedirs(result_dir, exist_ok=True)
         shutil.move(download_ret.get('path'), result_dir)
 
         log('downloaded files:\n' + str(os.listdir(result_dir)))
@@ -147,7 +136,7 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
+        os.makedirs(result_dir, exist_ok=True)
 
         if export_alignment.get('export_alignment_bam'):
             download_params = {'source_ref': alignment_ref,
@@ -191,7 +180,7 @@ class staging_downloader:
         """
         log("start downloading Annotated Metagenome Assembly files")
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
+        os.makedirs(result_dir, exist_ok=True)
         # download gff file
         download_ret = self.gfu.metagenome_to_gff({'metagenome_ref': metagenome_ref})
         gff_file = download_ret.get('file_path')
@@ -262,7 +251,7 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
+        os.makedirs(result_dir, exist_ok=True)
 
         params = {
             "input_ref": sample_set_ref,
@@ -293,7 +282,7 @@ class staging_downloader:
 
         # create the output directory and move the file there
         result_dir = os.path.join(self.scratch, str(uuid.uuid4()))
-        self._mkdir_p(result_dir)
+        os.makedirs(result_dir, exist_ok=True)
 
         if export_genome.get('export_genome_genbank'):
             download_params = {'genome_ref': genome_ref}
@@ -339,13 +328,14 @@ class staging_downloader:
         self.token = config['KB_AUTH_TOKEN']
         self.scratch = config['scratch']
 
+        self.ws = Workspace(self.ws_url, token=self.token)
         self.dfu = DataFileUtil(self.callback_url)
         self.ru = ReadsUtils(self.callback_url)
         self.au = AssemblyUtil(self.callback_url)
         self.gfu = GenomeFileUtil(self.callback_url)
         self.rau = ReadsAlignmentUtils(self.callback_url)
         self.sp_uploader = sample_uploader(self.callback_url, service_ver='beta')
-        self.dotfu = KBaseDataObjectToFileUtils(self.callback_url, token=self.token, service_ver='beta')
+        self.dotfu = KBaseDataObjectToFileUtils(self.callback_url, token=self.token)
 
     def export_to_staging(self, ctx, params):
         """
@@ -362,9 +352,9 @@ class staging_downloader:
 
         self._validate_export_params(params)
 
-        input_ref = params.get('input_ref')
-        workspace_name = params.get('workspace_name')
-        destination_dir = params.get('destination_dir')
+        input_ref = params['input_ref']
+        workspace_name = params['workspace_name']
+        destination_dir = self._norm_dest_dir(params['destination_dir'])
         generate_report = params.get('generate_report', False)
 
         obj_source = self.dfu.get_objects({"object_refs": [input_ref]})['data'][0]
@@ -388,13 +378,32 @@ class staging_downloader:
         else:
             raise ValueError('Unexpected data type')
 
+        files = self._move_results_to_staging(ctx, destination_dir, result_dir)
+
+        returnVal = dict()
+        returnVal['result_dir'] = result_dir
+
+        if generate_report:
+            report_output = self._generate_export_report(files, obj_name, workspace_name)
+            returnVal.update(report_output)
+
+        return returnVal
+    
+    def _norm_dest_dir(self, destination_dir):
+        dd = os.path.normpath(destination_dir)
+        if dd.startswith(".."):
+            raise ValueError(
+                "destination_dir may not point to an area outside of the user's staging area")
+        return dd
+    
+    def _move_results_to_staging(self, ctx, destination_dir, result_dir):
         staging_dir_prefix = self._get_staging_file_prefix(ctx['user_id'])
         staging_dir = os.path.join(staging_dir_prefix, destination_dir)
-        self._mkdir_p(staging_dir)
+        os.makedirs(staging_dir, exist_ok=True)
         files = os.listdir(result_dir)
         for file in files:
             # Doesn't use move to keep result dir around for other apps that might not
-            # have access to the staging ara
+            # have access to the staging area
             shutil.copy2(os.path.join(result_dir, file), staging_dir)
 
         # This is a KBase specific hack to allow the staging service to delete the files and
@@ -409,12 +418,36 @@ class staging_downloader:
         
         if not (set(os.listdir(staging_dir)) >= set(files)):
             raise ValueError('Unexpected error occurred during copying files')
+        return files
 
-        returnVal = dict()
-        returnVal['result_dir'] = result_dir
+# TODOS for JSON export:
+# * implement legacy w/ tests
+# * add UI
 
-        if generate_report:
-            report_output = self._generate_export_report(files, obj_name, workspace_name)
-            returnVal.update(report_output)
-
-        return returnVal
+    def export_json_to_staging(self, ctx, params):
+        for p in ['input_ref', 'destination_dir']:
+            if p not in params:
+                raise ValueError('"{}" parameter is required, but missing'.format(p))
+        format = params.get("format")
+        if format == None or format.strip() == "":
+            format = "standard"
+        else:
+            format = format.strip()
+        if format not in ["standard", "legacy_data_import_export"]:
+            raise ValueError("Unknown format: " + format)
+        destination_dir = self._norm_dest_dir(params['destination_dir'])
+        # can't use DFU because it doesn't include provenance
+        obj = self.ws.get_objects2({"objects": [{"ref": params["input_ref"]}]})['data'][0]
+        filename = obj["info"][1].replace("|", "_") + ".json"
+        result_dir = Path(self.scratch, str(uuid.uuid4()))
+        os.makedirs(result_dir, exist_ok=True)
+        if format == "legacy_data_import_export":
+            # TODO JSONDL implement legacy format
+            writeobj = None
+        else:
+            writeobjs = {filename: obj}
+        with ZipFile(result_dir / (filename + ".zip"), 'w', ZIP_DEFLATED) as z:
+            for fn, o in writeobjs.items():
+                z.writestr(fn, json.dumps(o, indent=4))
+        self._move_results_to_staging(ctx, destination_dir, result_dir)
+        return {"result_dir": result_dir}

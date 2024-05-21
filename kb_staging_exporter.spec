@@ -43,4 +43,32 @@ module kb_staging_exporter {
   /* export_to_staging: export large file associated with workspace object to staging area*/
   funcdef export_to_staging (ExportStagingParams params) returns (ExportStagingOutput returnVal) authentication required;
 
+  /* Input parameters for the export_json_to_staging function.
+     
+     input_ref - the workspace UPA of the object to download.
+     destination_dir - the location in the staging area to store the compressed object data.
+     format - the format of the data output. Currently supports:
+         standard - The default. Saves the data as returned by the workspace.
+         legacy_data_import_export - Saves the data in the same format as the old Data Import
+             Export service.
+  */
+  typedef structure {
+    WSRef input_ref;
+    string destination_dir;
+    string format;
+  } ExportJSONParams;
+
+  /* Result of the export_json_to_staging function.
+     
+     result_dir - the location in shared scratch space where the compressed object was stored.
+  */
+  typedef structure {
+    string result_dir;
+  } ExportJSONResult;
+
+  /* Download JSON object data for a workspace object and store it in zip file in the staging
+     area.
+  */
+  funcdef export_json_to_staging(ExportJSONParams params) returns (ExportJSONResult ret)
+      authentication required;
 };
