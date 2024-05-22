@@ -502,7 +502,7 @@ class kb_staging_exporterTest(unittest.TestCase):
                     expected = {
                         "data": {"sup": "dawg"},
                         "info": [
-                            1,
+                            oinfo[0],
                             "json|test",
                             None,
                             None,
@@ -514,7 +514,7 @@ class kb_staging_exporterTest(unittest.TestCase):
                             14,
                             {"meta": "data"},
                         ],
-                        "path": [str(self.wsid) + "/1/1"],
+                        "path": [upa],
                         "provenance": [
                             {
                                 "service": "yes, immediately",
@@ -542,3 +542,103 @@ class kb_staging_exporterTest(unittest.TestCase):
             # and the old permissions are otherwise retained
             assert os.stat(staging_dir).st_mode == 0o040775
             assert os.stat(staging_file).st_mode == 0o100775
+
+
+    @patch.object(staging_downloader, "STAGING_GLOBAL_FILE_PREFIX", new='/kb/module/work/tmp/')
+    def test_export_json_to_staging_legacy_DIE_format(self):
+        self.start_test()
+        
+        oinfo = self.wsClient.save_objects({"id": self.wsid, "objects": [{
+            "name": "legacytest",
+            "type": "Empty.AType",
+            "data": {"hidey": "ho"},
+            "meta": {"thisdata": "ismeta"},
+            "provenance": [{"service": "not data_import_export anyway"}],
+        }]})[0]
+        upa = f"{oinfo[6]}/{oinfo[0]}/{oinfo[4]}"
+        fileroot = "legacytest"
+        
+        params = {
+            "input_ref": upa,
+            "destination_dir": "legacy",
+            "format": "legacy_data_import_export"
+        }
+        resdir = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]["result_dir"]
+        staging_dir = Path("/kb/module/work/tmp/") / self.ctx["user_id"] / "legacy"
+        staging_file = staging_dir / (fileroot + ".json.zip")
+        rmd5 = self.md5(Path(resdir) / (fileroot + ".json.zip"))
+        dmd5 = self.md5(staging_file)
+        assert rmd5 == dmd5
+        with zipfile.ZipFile(staging_file) as z:
+            nl = z.namelist()
+            assert fileroot + ".json" in z.namelist()
+            nl.remove(fileroot + ".json")
+            assert len(nl) == 1
+            detfile = nl[0]
+            assert detfile.startswith("KBase_object_details_" + fileroot)
+            assert detfile.endswith(".json")
+            with z.open(fileroot + ".json") as f:
+                js = json.loads(f.read())
+                assert js == {"hidey": "ho"}
+            with z.open(detfile) as f:
+                js = json.loads(f.read())
+                assert js["info"][2].split("-")[0] == "Empty.AType"
+                assert js["provenance"]["info"][2].split("-")[0] == "Empty.AType"
+                js["info"][2] = None
+                js["info"][3] = None  # drop time
+                js["provenance"]["info"][2] = None
+                js["provenance"]["info"][3] = None  # drop time
+                js["provenance"]["created"] = None
+                expected = {
+                    "info": [
+                        oinfo[0],
+                        "legacytest",
+                        None,
+                        None,
+                        1,
+                        self.ctx["user_id"],
+                        self.wsid,
+                        self.wsName,
+                        "9ff7170650fe6095bbd21c9a8fed1fda",
+                        14,
+                        {"thisdata": "ismeta"},
+                    ],
+                    "provenance": {
+                        "info": [
+                            oinfo[0],
+                            "legacytest",
+                            None,
+                            None,
+                            1,
+                            self.ctx["user_id"],
+                            self.wsid,
+                            self.wsName,
+                            "9ff7170650fe6095bbd21c9a8fed1fda",
+                            14,
+                            {"thisdata": "ismeta"},
+                        ],
+                        "provenance": [
+                            {
+                                "service": "not data_import_export anyway",
+                                "method_params": [],
+                                "input_ws_objects": [],
+                                "resolved_ws_objects": [],
+                                "intermediate_incoming": [],
+                                "intermediate_outgoing": [],
+                                "external_data": [],
+                                "subactions": [],
+                                "custom": {}
+                            }
+                        ],
+                        "creator": self.ctx["user_id"],
+                        "created": None,
+                        "refs": [],
+                        "copy_source_inaccessible": 0,
+                        "extracted_ids": {}
+                    }
+                }
+                assert js == expected
+        # test that the group write permission is correctly added to the new files
+        # and the old permissions are otherwise retained
+        assert os.stat(staging_dir).st_mode == 0o040775
+        assert os.stat(staging_file).st_mode == 0o100775
