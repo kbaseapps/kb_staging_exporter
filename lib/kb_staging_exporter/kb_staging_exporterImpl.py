@@ -21,9 +21,9 @@ class kb_staging_exporter:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.0.4"
-    GIT_URL = "git@github.com:Tianhao-Gu/kb_staging_exporter.git"
-    GIT_COMMIT_HASH = "22060e7c8f3dde6c791ecec611388adc44a6cef6"
+    VERSION = "1.0.8"
+    GIT_URL = "https://github.com/kbaseapps/kb_staging_exporter.git"
+    GIT_COMMIT_HASH = "6a5873c59f978c62ab03ac8c50c15caaa334574f"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -77,6 +77,38 @@ class kb_staging_exporter:
                              'returnVal is not type dict as required.')
         # return the results
         return [returnVal]
+
+    def export_json_to_staging(self, ctx, params):
+        """
+        Download JSON object data for a workspace object and store it in zip file in the staging
+        area.
+        :param params: instance of type "ExportJSONParams" (Input parameters
+           for the export_json_to_staging function. input_ref - the workspace
+           UPA of the object to download. destination_dir - the location in
+           the staging area to store the compressed object data. format - the
+           format of the data output. Currently supports: standard - The
+           default. Saves the data as returned by the workspace.
+           legacy_data_import_export - Saves the data in the same format as
+           the old Data Import Export service.) -> structure: parameter
+           "input_ref" of type "WSRef" (Ref to a WS object @id ws), parameter
+           "destination_dir" of String, parameter "format" of String
+        :returns: instance of type "ExportJSONResult" (Result of the
+           export_json_to_staging function. result_dir - the location in
+           shared scratch space where the compressed object was stored.) ->
+           structure: parameter "result_dir" of String
+        """
+        # ctx is the context object
+        # return variables are: ret
+        #BEGIN export_json_to_staging
+        ret = self.staging_downloader.export_json_to_staging(ctx, params)
+        #END export_json_to_staging
+
+        # At some point might do deeper type checking...
+        if not isinstance(ret, dict):
+            raise ValueError('Method export_json_to_staging return value ' +
+                             'ret is not type dict as required.')
+        # return the results
+        return [ret]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

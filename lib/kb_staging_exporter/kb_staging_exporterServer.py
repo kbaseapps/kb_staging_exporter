@@ -342,6 +342,10 @@ class Application(object):
                              name='kb_staging_exporter.export_to_staging',
                              types=[dict])
         self.method_authentication['kb_staging_exporter.export_to_staging'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_staging_exporter.export_json_to_staging,
+                             name='kb_staging_exporter.export_json_to_staging',
+                             types=[dict])
+        self.method_authentication['kb_staging_exporter.export_json_to_staging'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_staging_exporter.status,
                              name='kb_staging_exporter.status',
                              types=[dict])
