@@ -1,5 +1,6 @@
 import time
 import os
+import datetime
 import json
 import errno
 import uuid
@@ -421,7 +422,6 @@ class staging_downloader:
         return files
 
 # TODOS for JSON export:
-# * implement legacy w/ tests
 # * add UI
 
     def export_json_to_staging(self, ctx, params):
@@ -438,15 +438,30 @@ class staging_downloader:
         destination_dir = self._norm_dest_dir(params['destination_dir'])
         # can't use DFU because it doesn't include provenance
         obj = self.ws.get_objects2({"objects": [{"ref": params["input_ref"]}]})['data'][0]
-        filename = obj["info"][1].replace("|", "_") + ".json"
+        cleanname = obj["info"][1].replace("|", "_")
         result_dir = Path(self.scratch, str(uuid.uuid4()))
         os.makedirs(result_dir, exist_ok=True)
         if format == "legacy_data_import_export":
-            # TODO JSONDL implement legacy format
-            writeobj = None
+            prov = {
+                "info": obj["info"],
+                "provenance": {
+                    "copy_source_inaccessible": obj["copy_source_inaccessible"],
+                    "created": obj["created"],
+                    "creator": obj["creator"],
+                    "extracted_ids": obj["extracted_ids"],
+                    "info": obj["info"],  # match legacy output even though it's redundant
+                    "provenance": obj["provenance"],
+                    "refs": obj["refs"]
+                }
+            }
+            datestr = datetime.datetime.now().isoformat().replace(":", "").replace(".", "")
+            writeobjs = {
+                cleanname + ".json": obj["data"],
+                "KBase_object_details_" + cleanname + datestr + ".json": prov,
+            }
         else:
-            writeobjs = {filename: obj}
-        with ZipFile(result_dir / (filename + ".zip"), 'w', ZIP_DEFLATED) as z:
+            writeobjs = {cleanname + ".json": obj}
+        with ZipFile(result_dir / (cleanname + ".json.zip"), 'w', ZIP_DEFLATED) as z:
             for fn, o in writeobjs.items():
                 z.writestr(fn, json.dumps(o, indent=4))
         self._move_results_to_staging(ctx, destination_dir, result_dir)
