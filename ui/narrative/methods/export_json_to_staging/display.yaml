@@ -1,0 +1,50 @@
+name     : Export Object JSON To Staging Area
+subtitle :
+tooltip  : Export a KBase object's JSON represenation to the Staging Area.
+
+icon: data-yellow.png
+
+screenshots :
+    []
+
+suggestions :
+    apps:
+        related :
+            []
+        next :
+            []
+    methods:
+        related :
+            []
+        next :
+            []
+
+parameters :
+    input_ref :
+        ui-name: |
+            Data Object
+        short-hint : |
+            Select the input data object.
+
+    destination_dir:
+        ui-name: |
+            Destination Directory
+        short-hint : |
+            The destination directory to which the file will be saved.
+
+    format:
+        ui-name: |
+            Output format
+        short-hint : |
+            The format of the output zip file. standard is the output as returned from the workspace. legacy_data_import_export is the format that was returned from direct JSON downloads via the app panel prior to the coversion to this app.
+
+description : |
+    <p>This App is designed to export the JSON representation of a KBase object to the Staging Area.</p>
+
+    <p>The App allows the user to select a folder in the Staging Area where the files will be located. This can be done by setting the folder name in the parameter Destination Directory. If the folder named in Destination Directory does not exist, a new folder will be created. For convenience, the workspace_export folder name is filled in by default as a place to manage files for download. The Staging Area can be accessed via the Data Panel by clicking the + icon; this action will slide out the data panel. The Destination Directory can be found in the Import tab. Once the selected directory is accessed, files can be downloaded by clicking the downwards arrow.</p>
+
+publications :
+    -
+        display-text: |
+            Arkin AP, Cottingham RW, Henry CS, Harris NL, Stevens RL, Maslov S, et al. KBase: The United States Department of Energy Systems Biology Knowledgebase. Nature Biotechnology. 2018;36: 566. doi: 10.1038/nbt.4163
+        link: https://www.nature.com/articles/nbt.4163

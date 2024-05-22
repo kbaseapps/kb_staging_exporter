@@ -1,0 +1,76 @@
+{
+  "ver" : "",
+  "authors" : ["gaprice"],
+  "contact" : "https://www.kbase.us/support/",
+  "visible" : true,
+  "categories" : ["active","util"],
+  "widgets": {
+    "input": null,
+    "output" : "no-display"
+  },
+  "parameters" : [
+    {
+      "id" : "input_ref",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "" ],
+      "field_type" : "text",
+      "text_options" : {
+        "valid_ws_types" : ["*"]
+      }
+    },
+    {
+      "id" : "destination_dir",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "workspace_export" ],
+      "field_type" : "text"
+    },
+    {
+      "id": "format",
+      "optional" : false,
+      "advanced" : false,
+      "allow_multiple" : false,
+      "default_values" : [ "legacy_data_import_export" ],
+      "field_type" : "dropdown",
+      "dropdown_options":{
+        "options": [
+          {
+            "value": "standard",
+            "display": "standard"
+          },
+          {
+            "value": "legacy_data_import_export",
+            "display": "legacy_data_import_export"
+          }
+        ]
+      }
+    }
+  ],
+  "behavior" : {
+    "service-mapping" : {
+      "url" : "",
+      "name" : "kb_staging_exporter",
+      "method" : "export_json_to_staging",
+      "input_mapping" : [
+        {
+          "input_parameter" : "input_ref",
+          "target_property" : "input_ref",
+          "target_type_transform": "resolved-ref"
+        },
+        {
+          "input_parameter" : "destination_dir",
+          "target_property" : "destination_dir"
+        },
+        {
+          "input_parameter" : "format",
+          "target_property" : "format"
+        }
+      ],
+      "output_mapping": []
+    }
+  },
+  "job_id_output_field": "docker"
+}

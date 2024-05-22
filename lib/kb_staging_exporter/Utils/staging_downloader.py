@@ -421,9 +421,6 @@ class staging_downloader:
             raise ValueError('Unexpected error occurred during copying files')
         return files
 
-# TODOS for JSON export:
-# * add UI
-
     def export_json_to_staging(self, ctx, params):
         for p in ['input_ref', 'destination_dir']:
             if p not in params:
