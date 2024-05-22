@@ -11,8 +11,7 @@ MAINTAINER KBase Developer
 # -----------------------------------------
 
 RUN pip install --upgrade pip && \
-	pip install pyyaml && \
-	pip install requests
+	pip install pyyaml==6.0.1 requests==2.27.1
 
 COPY ./ /kb/module
 RUN mkdir -p /kb/module/work
