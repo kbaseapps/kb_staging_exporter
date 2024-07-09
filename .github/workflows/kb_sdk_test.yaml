@@ -41,10 +41,10 @@ jobs:
         KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
       run: |
         # Update sdk image in actions
-        sed -i "s#kbase/kb_sdk#${{matrix.sdk_image}}#g" $GITHUB_WORKSPACE/kb/sdk_actions/bin/kb-sdk
-        sed -i "s#kbase/kb_sdk#${{matrix.sdk_image}}#g" $GITHUB_WORKSPACE/kb/sdk_actions/bin/make_testdir
-        cat $GITHUB_WORKSPACE/kb/sdk_actions/bin/kb-sdk
-        cat $GITHUB_WORKSPACE/kb/sdk_actions/bin/make_testdir
+        sed -i "s#kbase/kb_sdk#${{matrix.sdk_image}}#g" $GITHUB_WORKSPACE/kb_sdk_actions/bin/kb-sdk
+        sed -i "s#kbase/kb_sdk#${{matrix.sdk_image}}#g" $GITHUB_WORKSPACE/kb_sdk_actions/bin/make_testdir
+        cat $GITHUB_WORKSPACE/kb_sdk_actions/bin/kb-sdk
+        cat $GITHUB_WORKSPACE/kb_sdk_actions/bin/make_testdir
 
         # Pull kb-sdk & create startup script
         docker pull ${{matrix.sdk_image}}
