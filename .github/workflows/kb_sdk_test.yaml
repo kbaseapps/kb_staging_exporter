@@ -14,7 +14,12 @@ on:
 jobs:
 
   sdk_tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - sdk_image: "ghcr.io/kbase/kb_sdk_patch-develop:br-main"
+    
     steps:
 
     - name: Check out GitHub repo
@@ -35,10 +40,14 @@ jobs:
       env:
         KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
       run: |
-        # Verify kb_sdk_actions clone worked
-        test -f "$HOME/kb_sdk_actions/bin/kb-sdk" && echo "CI files cloned"
+        # Update sdk image in actions
+        sed -i "s#kbase/kb_sdk#${{matrix.sdk_image}}#g" $GITHUB_WORKSPACE/kb/sdk_actions/bin/kb-sdk
+        sed -i "s#kbase/kb_sdk#${{matrix.sdk_image}}#g" $GITHUB_WORKSPACE/kb/sdk_actions/bin/make_testdir
+        cat $GITHUB_WORKSPACE/kb/sdk_actions/bin/kb-sdk
+        cat $GITHUB_WORKSPACE/kb/sdk_actions/bin/make_testdir
+
         # Pull kb-sdk & create startup script
-        docker pull ghcr.io/kbase/kb_sdk_patch-develop:br-main
+        docker pull ${{matrix.sdk_image}}
        
         sh $GITHUB_WORKSPACE/kb_sdk_actions/bin/make_testdir && echo "Created test_local"
         test -f "test_local/test.cfg" && echo "Confirmed config exists"
@@ -55,8 +64,6 @@ jobs:
     - name: Run tests
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
         sh $GITHUB_WORKSPACE/kb_sdk_actions/bin/kb-sdk test
 
