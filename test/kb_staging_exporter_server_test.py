@@ -485,6 +485,7 @@ class kb_staging_exporterTest(unittest.TestCase):
             ]:
             params = {"input_ref": upa, "destination_dir": ddir, "format": format}
             resdir = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]["result_dir"]
+            assert resdir.startswith("/kb/module/work/tmp/") is True
             staging_dir = Path("/kb/module/work/tmp/") / ddir
             staging_file = staging_dir / (filename + ".zip")
             rmd5 = self.md5(Path(resdir) / (filename + ".zip"))
@@ -564,6 +565,7 @@ class kb_staging_exporterTest(unittest.TestCase):
             "format": "legacy_data_import_export"
         }
         resdir = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]["result_dir"]
+        assert resdir.startswith("/kb/module/work/tmp/") is True
         staging_dir = Path("/kb/module/work/tmp/") / self.ctx["user_id"] / "legacy"
         staging_file = staging_dir / (fileroot + ".json.zip")
         rmd5 = self.md5(Path(resdir) / (fileroot + ".json.zip"))

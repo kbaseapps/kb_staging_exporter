@@ -1,6 +1,11 @@
 # kb_staging_exporter release notes
 =========================================
 
+1.0.9
+-----
+* Fixed a bug that caused the export_json_to_staging app to fail with a JSON marshalling
+  exception
+
 1.0.8
 -----
 * Added the export_json_to_staging function
