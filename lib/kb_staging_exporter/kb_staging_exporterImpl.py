@@ -21,9 +21,9 @@ class kb_staging_exporter:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.0.8"
+    VERSION = "1.0.9"
     GIT_URL = "https://github.com/kbaseapps/kb_staging_exporter.git"
-    GIT_COMMIT_HASH = "6a5873c59f978c62ab03ac8c50c15caaa334574f"
+    GIT_COMMIT_HASH = "333975ed017749775fe8321a99a9d8a3bb6c6494"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
