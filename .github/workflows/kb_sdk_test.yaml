@@ -65,7 +65,7 @@ jobs:
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
       run: |
-        sh $GITHUB_WORKSPACE/kb_sdk_actions/bin/kb-sdk test --verbose
+        DOCKER_CONFIG=$HOME/docker sh $GITHUB_WORKSPACE/kb_sdk_actions/bin/kb-sdk test --verbose
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
