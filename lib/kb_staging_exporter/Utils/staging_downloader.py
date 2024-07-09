@@ -462,4 +462,4 @@ class staging_downloader:
             for fn, o in writeobjs.items():
                 z.writestr(fn, json.dumps(o, indent=4))
         self._move_results_to_staging(ctx, destination_dir, result_dir)
-        return {"result_dir": result_dir}
+        return {"result_dir": str(result_dir)}
