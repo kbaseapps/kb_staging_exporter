@@ -21,9 +21,9 @@ class kb_staging_exporter:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "1.0.9"
+    VERSION = "1.0.10"
     GIT_URL = "https://github.com/kbaseapps/kb_staging_exporter.git"
-    GIT_COMMIT_HASH = "333975ed017749775fe8321a99a9d8a3bb6c6494"
+    GIT_COMMIT_HASH = "6474e72609024af56e142156a73ca94605f5f05e"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -94,8 +94,10 @@ class kb_staging_exporter:
            "destination_dir" of String, parameter "format" of String
         :returns: instance of type "ExportJSONResult" (Result of the
            export_json_to_staging function. result_dir - the location in
-           shared scratch space where the compressed object was stored.) ->
-           structure: parameter "result_dir" of String
+           shared scratch space where the compressed object was stored.
+           result_text - text describing the result of the app run suitable
+           for displaying to a Narrative user.) -> structure: parameter
+           "result_dir" of String, parameter "result_text" of String
         """
         # ctx is the context object
         # return variables are: ret
