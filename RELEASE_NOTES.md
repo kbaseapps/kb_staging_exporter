@@ -1,6 +1,11 @@
 # kb_staging_exporter release notes
 =========================================
 
+1.0.10
+------
+
+* Updated the JSON download app to use the new result tab output system.
+
 1.0.9
 -----
 * Fixed a bug that caused the export_json_to_staging app to fail with a JSON marshalling

@@ -484,7 +484,10 @@ class kb_staging_exporterTest(unittest.TestCase):
                 ("  standard   ", "jsonthree")
             ]:
             params = {"input_ref": upa, "destination_dir": ddir, "format": format}
-            resdir = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]["result_dir"]
+            res = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]
+            assert res["result_text"] == (
+                f"Successfully exported JSON to staging area in file {ddir}/json_test.json.zip")
+            resdir = res["result_dir"]
             assert resdir.startswith("/kb/module/work/tmp/") is True
             staging_dir = Path("/kb/module/work/tmp/") / ddir
             staging_file = staging_dir / (filename + ".zip")
@@ -564,7 +567,10 @@ class kb_staging_exporterTest(unittest.TestCase):
             "destination_dir": "legacy",
             "format": "legacy_data_import_export"
         }
-        resdir = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]["result_dir"]
+        res = self.serviceImpl.export_json_to_staging(self.ctx, params)[0]
+        assert res["result_text"] == (
+                "Successfully exported JSON to staging area in file legacy/legacytest.json.zip")
+        resdir = res["result_dir"]
         assert resdir.startswith("/kb/module/work/tmp/") is True
         staging_dir = Path("/kb/module/work/tmp/") / self.ctx["user_id"] / "legacy"
         staging_file = staging_dir / (fileroot + ".json.zip")

@@ -458,8 +458,13 @@ class staging_downloader:
             }
         else:
             writeobjs = {cleanname + ".json": obj}
-        with ZipFile(result_dir / (cleanname + ".json.zip"), 'w', ZIP_DEFLATED) as z:
+        zipfile = cleanname + ".json.zip"
+        with ZipFile(result_dir / zipfile, 'w', ZIP_DEFLATED) as z:
             for fn, o in writeobjs.items():
                 z.writestr(fn, json.dumps(o, indent=4))
         self._move_results_to_staging(ctx, destination_dir, result_dir)
-        return {"result_dir": str(result_dir)}
+        return {
+            "result_dir": str(result_dir),
+            "result_text": "Successfully exported JSON to staging area in file "
+                + os.path.join(destination_dir, zipfile)
+        }

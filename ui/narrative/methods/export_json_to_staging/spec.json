@@ -6,7 +6,7 @@
   "categories" : ["active","util"],
   "widgets": {
     "input": null,
-    "output" : "no-display"
+    "output" : "text-only"
   },
   "parameters" : [
     {
@@ -69,7 +69,12 @@
           "target_property" : "format"
         }
       ],
-      "output_mapping": []
+      "output_mapping": [
+        {
+          "service_method_output_path": [0, "result_text"],
+          "target_property": "result_text"
+        }
+      ]
     }
   },
   "job_id_output_field": "docker"

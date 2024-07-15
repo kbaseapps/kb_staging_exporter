@@ -61,9 +61,12 @@ module kb_staging_exporter {
   /* Result of the export_json_to_staging function.
      
      result_dir - the location in shared scratch space where the compressed object was stored.
+     result_text - text describing the result of the app run suitable for displaying to a
+         Narrative user.
   */
   typedef structure {
     string result_dir;
+    string result_text;
   } ExportJSONResult;
 
   /* Download JSON object data for a workspace object and store it in zip file in the staging
